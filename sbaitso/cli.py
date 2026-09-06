@@ -50,25 +50,48 @@ PALETTE_FG = {
 
 # OSC palette control is supported by xterm-compatible terminals. Unsupported
 # terminals ignore it and keep the existing ANSI foreground-only fallback.
-AMBER_ANSI = (
-    "#260700", "#ff7a24", "#ff9a3d", "#ffc35a",
-    "#b95a1b", "#e07025", "#ffb347", "#ffd18a",
-    "#7a3515", "#ff8a32", "#ffad4d", "#ffd36b",
-    "#d76a22", "#f08a35", "#ffd18a", "#ffe0a3",
+_STANDARD_ANSI = (
+    "#000000", "#aa0000", "#00aa00", "#aa5500",
+    "#0000aa", "#aa00aa", "#00aaaa", "#aaaaaa",
+    "#555555", "#ff5555", "#55ff55", "#ffff55",
+    "#5555ff", "#ff55ff", "#55ffff", "#ffffff",
 )
+PALETTE_TERMINALS = {
+    "cga1": ("#0000aa", "#55ffff", "#55ffff", _STANDARD_ANSI),
+    "cga2": ("#000000", "#55ff55", "#55ff55", _STANDARD_ANSI),
+    "ega": ("#000055", "#ffffff", "#ffffff", _STANDARD_ANSI),
+    "vga": ("#0a0a0a", "#c8c8c8", "#c8c8c8", _STANDARD_ANSI),
+    "amber": (
+        "#160400", "#ffb347", "#ffd36b",
+        (
+            "#260700", "#ff7a24", "#ff9a3d", "#ffc35a",
+            "#b95a1b", "#e07025", "#ffb347", "#ffd18a",
+            "#7a3515", "#ff8a32", "#ffad4d", "#ffd36b",
+            "#d76a22", "#f08a35", "#ffd18a", "#ffe0a3",
+        ),
+    ),
+}
 
 
 def apply_native_palette(name: str) -> None:
-    """Apply Amber as a phosphor palette where terminal OSC is supported."""
+    """Apply a terminal theme where OSC palette controls are supported."""
     if not sys.stdout.isatty():
         return
-    if name == "amber":
-        ansi = "".join(f"\x1b]4;{index};{color}\x07" for index, color in enumerate(AMBER_ANSI))
-        sys.stdout.write(ansi + "\x1b]10;#ffb347\x07\x1b]11;#160400\x07\x1b]12;#ffd36b\x07")
-    else:
-        # Restore indexed, foreground, background, and cursor colors after Amber.
-        sys.stdout.write("\x1b]104\x07\x1b]110\x07\x1b]111\x07\x1b]112\x07")
+    background, foreground, cursor, ansi_colors = PALETTE_TERMINALS[name]
+    ansi = "".join(
+        f"\x1b]4;{index};{color}\x07" for index, color in enumerate(ansi_colors)
+    )
+    sys.stdout.write(
+        ansi + f"\x1b]10;{foreground}\x07\x1b]11;{background}\x07\x1b]12;{cursor}\x07"
+    )
     sys.stdout.flush()
+
+
+def reset_native_palette() -> None:
+    """Restore the user's terminal colors after the native client exits."""
+    if sys.stdout.isatty():
+        sys.stdout.write("\x1b]104\x07\x1b]110\x07\x1b]111\x07\x1b]112\x07")
+        sys.stdout.flush()
 
 
 @contextmanager
@@ -274,7 +297,7 @@ async def _run(args: argparse.Namespace) -> int:
                 await renderer.render(ev)
         finally:
             reader.stop()
-            apply_native_palette("cga1")
+            reset_native_palette()
             print(RESET, end="")
     return 1 if engine.startup_error else 0
 
