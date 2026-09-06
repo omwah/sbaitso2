@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import random
+from importlib.metadata import PackageNotFoundError, version
 
 from .events import Beep, Line, Say
 
-VERSION = "4.12"
+try:
+    VERSION = version("sbaitso2")
+except PackageNotFoundError:  # pragma: no cover - editable/package installs supply it
+    VERSION = "0.1.0"
 
 
 def banner_events(neural_link: str) -> list:
@@ -14,13 +18,12 @@ def banner_events(neural_link: str) -> list:
     d = 90  # per-line delay for that authentic POST feel
     return [
         Beep(freq=880.0, ms=110),
-        Line(" Creative Labs  SBAITSO/2  DRIVER VERSION " + VERSION, color="cyan", delay_ms=40),
-        Line(" Copyright (c) 1991-2025  ...ALL RIGHTS RESERVED...SORT OF", color="dim", delay_ms=250),
+        Line(f" Towhee Labs  SBAITSO/2  VERSION {VERSION}", color="cyan", wrap=True, delay_ms=40),
         Line("", delay_ms=120),
-        Line(" Detecting Sound Blaster ............ OK", delay_ms=d),
-        Line(" Loading SBTALKER 2.0 ................ OK", delay_ms=d),
-        Line(" Expanding EMPATHY.SYS ............... OK", delay_ms=d),
-        Line(f" Probing NEURAL LINK ................. {neural_link}", delay_ms=d),
+        Line(" Detecting Sound Blaster ...... OK", wrap=True, delay_ms=d),
+        Line(" Loading SBTALKER 2.0 ...... OK", wrap=True, delay_ms=d),
+        Line(" Expanding EMPATHY.SYS ...... OK", wrap=True, delay_ms=d),
+        Line(f" Probing NEURAL LINK ...... {neural_link}", wrap=True, delay_ms=d),
         Line("", delay_ms=200),
     ]
 

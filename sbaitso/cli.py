@@ -10,7 +10,9 @@ import argparse
 import asyncio
 import concurrent.futures
 import os
+import shutil
 import sys
+import textwrap
 from contextlib import contextmanager
 
 try:  # POSIX only; Windows falls back to line input
@@ -39,6 +41,18 @@ ANSI = {
 RESET = "\x1b[0m"
 SAY_WRAP_WIDTH = 72
 RESPONSE_INDENT = " "
+
+
+def wrap_terminal_line(text: str, width: int) -> list[str]:
+    """Wrap a boot/listing line at word boundaries without splitting words."""
+    if not text:
+        return [""]
+    return textwrap.wrap(
+        text,
+        width=max(1, width),
+        break_long_words=False,
+        break_on_hyphens=False,
+    ) or [""]
 
 PALETTE_FG = {
     "cga1": ANSI["cyan"],
@@ -156,7 +170,7 @@ class KeyReader:
 class Renderer:
     def __init__(self, fast: bool, voice: bool = True) -> None:
         self.fast = fast
-        self.say_color = PALETTE_FG["cga1"]
+        self.say_color = PALETTE_FG["vga"]
         self.voice_on = voice and available()
         self.voice_state = VoiceState()
         self.espeak = EspeakVoice() if self.voice_on else None
@@ -210,7 +224,9 @@ class Renderer:
         if isinstance(ev, Line):
             if ev.delay_ms:
                 await asyncio.sleep(ev.delay_ms / 1000)
-            print(f"{ANSI.get(ev.color, '')}{ev.text}{RESET}")
+            width = shutil.get_terminal_size(fallback=(SAY_WRAP_WIDTH, 24)).columns
+            lines = wrap_terminal_line(ev.text, width) if ev.wrap else [ev.text]
+            print(f"{ANSI.get(ev.color, '')}{chr(10).join(lines)}{RESET}")
             self.say_column = 0
             self.say_word = ""
         elif isinstance(ev, Say):
@@ -337,7 +353,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--remote-model", default=None)
         sp.add_argument("--remote-key", default=None)
         sp.add_argument("--sass", choices=["LOW", "NORMAL", "HIGH"], default="NORMAL")
-        sp.add_argument("--color", choices=list(PALETTE_FG), default="cga1")
+        sp.add_argument("--color", choices=list(PALETTE_FG), default="vga")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
         sp.add_argument(

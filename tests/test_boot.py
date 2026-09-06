@@ -1,8 +1,16 @@
 import pytest
 
-from sbaitso.boot import greeting_events, retro_warning
+from sbaitso.boot import VERSION, banner_events, greeting_events, retro_warning
 from sbaitso.engine import Engine, EngineArgs, Inputs
 from sbaitso.events import Line, Palette, Say
+
+
+def test_boot_banner_uses_towhee_branding_and_package_version():
+    lines = [event for event in banner_events("OK") if isinstance(event, Line)]
+    assert lines[0].text == f" Towhee Labs  SBAITSO/2  VERSION {VERSION}"
+    assert lines[0].wrap is True
+    assert all("COPYRIGHT" not in line.text.upper() for line in lines)
+    assert not any("......." in line.text for line in lines)
 
 
 def test_retro_warning_has_a_blank_line_before_the_doctor_speaks():

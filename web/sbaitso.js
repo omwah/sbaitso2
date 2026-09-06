@@ -42,7 +42,7 @@ const term = new window.Terminal({
   fontSize: 16,
   scrollback: 4000,
   convertEol: true,
-  theme: PALETTES.cga1,
+  theme: PALETTES.vga,
 });
 const fitAddon = new window.FitAddon.FitAddon();
 term.loadAddon(fitAddon);
@@ -65,7 +65,27 @@ function writeOutput(text) {
   followOutput();
 }
 
-let sayColor = COLORS.cyan;
+function wrapTerminalLine(text) {
+  const width = Math.max(1, term.cols || SAY_WRAP_WIDTH);
+  const indent = (text.match(/^\s*/) || [""])[0];
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return indent;
+  const lines = [];
+  let line = indent;
+  for (const word of words) {
+    const hasWord = line.length > indent.length;
+    if (hasWord && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = indent + word;
+    } else {
+      line += (hasWord ? " " : "") + word;
+    }
+  }
+  lines.push(line);
+  return lines.join("\r\n");
+}
+
+let sayColor = COLORS.white;
 let inputEnabled = false;
 let inputBuffer = "";
 let dead = false;
@@ -258,7 +278,8 @@ async function handle(ev) {
   switch (ev.type) {
     case "line":
       if (ev.delay_ms) await sleep(ev.delay_ms);
-      writeOutput((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
+      const text = ev.wrap ? wrapTerminalLine(ev.text) : ev.text;
+      writeOutput((COLORS[ev.color] || "") + text + RESET + "\r\n");
       sayColumn = 0;
       sayWord = "";
       break;

@@ -3,13 +3,25 @@ import re
 import pytest
 
 import sbaitso.cli as cli
-from sbaitso.cli import Renderer, build_parser, engine_args_from_namespace
+from sbaitso.cli import Renderer, build_parser, engine_args_from_namespace, wrap_terminal_line
 from sbaitso.events import Prompt, Say
 
 
 def test_color_option_configures_the_engine_palette():
     args = build_parser().parse_args(["run", "--color", "amber"])
     assert engine_args_from_namespace(args).palette == "amber"
+
+
+def test_default_color_is_vga():
+    args = build_parser().parse_args(["run"])
+    assert engine_args_from_namespace(args).palette == "vga"
+
+
+def test_boot_line_wrapper_uses_word_boundaries_at_live_width():
+    assert wrap_terminal_line("Probing NEURAL LINK ...... NOT FOUND", 20) == [
+        "Probing NEURAL LINK",
+        "...... NOT FOUND",
+    ]
 
 
 @pytest.mark.parametrize(
