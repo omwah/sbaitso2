@@ -1,0 +1,21 @@
+# Reference material — large scan, kept locally only
+sbaitso-manual-1991.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+*.egg-info/
+.uv-cache/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
