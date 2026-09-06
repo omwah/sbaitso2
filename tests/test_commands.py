@@ -17,6 +17,13 @@ async def test_help_pager(engine):
     assert any("PAGE 3 OF 3" in t for t in lines3)
 
 
+async def test_empty_retro_turn_uses_documented_nothing_response(engine):
+    from sbaitso.retro import NOTHING_RESPONSES
+
+    ev = await events_of(engine, "")
+    assert " ".join(says_of(ev)) in NOTHING_RESPONSES
+
+
 async def test_m_only_after_help(engine):
     # "M" without HELP active is conversation, not a command
     ev = await events_of(engine, "M")

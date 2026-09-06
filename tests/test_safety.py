@@ -1,4 +1,6 @@
-from sbaitso.safety import crisis_response, is_crisis, is_swear
+import random
+
+from sbaitso.safety import SWEAR_RESPONSES, crisis_response, is_crisis, is_swear, swear_response
 
 from conftest import events_of, says_of
 
@@ -19,7 +21,15 @@ def test_crisis_response_has_resources():
 
 def test_swears():
     assert is_swear("this is shit")
+    assert is_swear("damn it")
     assert not is_swear("this is fine")
+    assert not is_swear("a shitake mushroom")
+
+
+def test_swear_response_uses_the_retro_warning_pool():
+    reply = swear_response("MIKE", random.Random(0))
+    expected = {line.replace("{N}", "MIKE") for line in SWEAR_RESPONSES}
+    assert reply in expected
 
 
 async def test_engine_crisis_path(engine):
@@ -31,8 +41,11 @@ async def test_engine_crisis_path(engine):
     assert "WHY DO YOU FEEL" not in says[0]
 
 
-async def test_swear_then_crash(engine):
-    for _ in range(3):
+async def test_swear_warnings_precede_a_third_strike_parity_crash(engine):
+    expected = {line.replace("{N}", "MIKE") for line in SWEAR_RESPONSES}
+    for _ in range(2):
         ev = await events_of(engine, "fuck you")
-    text = " ".join(says_of(ev))
-    assert "PARITY ERROR" in text
+        assert " ".join(says_of(ev)) in expected
+
+    ev = await events_of(engine, "fuck you")
+    assert "PARITY ERROR" in " ".join(says_of(ev))
