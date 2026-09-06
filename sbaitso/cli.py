@@ -115,24 +115,42 @@ class Renderer:
         self.voice_state = VoiceState()
         self.espeak = EspeakVoice() if self.voice_on else None
         self.say_column = 0
+        self.say_word = ""
 
-    async def _write_say_text(self, text: str, color: str, reveal: bool) -> None:
-        """Write streamed text at a stable, DOS-like response width."""
-        for ch in text:
-            if ch == "\n":
-                sys.stdout.write("\n")
-                self.say_column = 0
-                continue
+    async def _write_char(self, ch: str, color: str, reveal: bool) -> None:
+        sys.stdout.write(f"{color}{ch}{RESET}")
+        self.say_column += 1
+        if reveal and not self.fast:
+            sys.stdout.flush()
+            await asyncio.sleep(0.012)
+
+    async def _flush_say_word(self, color: str, reveal: bool) -> None:
+        """Emit a complete pending word, wrapping before rather than within it."""
+        if not self.say_word:
+            return
+        if self.say_column and self.say_column + len(self.say_word) > SAY_WRAP_WIDTH:
+            sys.stdout.write("\n")
+            self.say_column = 0
+        for ch in self.say_word:
             if self.say_column >= SAY_WRAP_WIDTH:
                 sys.stdout.write("\n")
                 self.say_column = 0
-                if ch == " ":
-                    continue
-            sys.stdout.write(f"{color}{ch}{RESET}")
-            self.say_column += 1
-            if reveal and not self.fast:
-                sys.stdout.flush()
-                await asyncio.sleep(0.012)
+            await self._write_char(ch, color, reveal)
+        self.say_word = ""
+
+    async def _write_say_text(self, text: str, color: str, reveal: bool) -> None:
+        """Word-wrap streamed text at a stable, DOS-like response width."""
+        for ch in text:
+            if ch == "\n":
+                await self._flush_say_word(color, reveal)
+                sys.stdout.write("\n")
+                self.say_column = 0
+            elif ch.isspace():
+                await self._flush_say_word(color, reveal)
+                if self.say_column < SAY_WRAP_WIDTH:
+                    await self._write_char(ch, color, reveal)
+            else:
+                self.say_word += ch
 
     async def render(self, ev: Event) -> None:
         if isinstance(ev, Line):
@@ -140,6 +158,7 @@ class Renderer:
                 await asyncio.sleep(ev.delay_ms / 1000)
             print(f"{ANSI.get(ev.color, '')}{ev.text}{RESET}")
             self.say_column = 0
+            self.say_word = ""
         elif isinstance(ev, Say):
             if ev.delay_ms:
                 await asyncio.sleep(ev.delay_ms / 1000)
@@ -152,6 +171,7 @@ class Renderer:
                 )
             await self._write_say_text(ev.text, color, ev.reveal)
             if ev.line_end:
+                await self._flush_say_word(color, ev.reveal)
                 sys.stdout.write("\n")
                 self.say_column = 0
             sys.stdout.flush()
@@ -164,14 +184,17 @@ class Renderer:
             self.say_color = PALETTE_FG.get(ev.name, self.say_color)
             print(f"{ANSI['yellow']}PALETTE: {ev.name.upper()}{RESET}")
             self.say_column = 0
+            self.say_word = ""
         elif isinstance(ev, Clear):
             sys.stdout.write("\x1b[2J\x1b[H")
             self.say_column = 0
+            self.say_word = ""
             sys.stdout.flush()
         elif isinstance(ev, Prompt):
             label = (ev.label or "YOU").upper()
             print(f"{ANSI['dim']}{label}> {RESET}", end="", flush=True)
             self.say_column = 0
+            self.say_word = ""
         elif isinstance(ev, (VoiceParams, VoiceEnabled)):
             self.voice_state.update(ev)
         elif isinstance(ev, Quit):

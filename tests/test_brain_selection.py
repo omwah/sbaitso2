@@ -3,8 +3,14 @@ import json
 import pytest
 
 from sbaitso.brains import RetroBrain
-from sbaitso.engine import Engine, EngineArgs, Inputs
+from sbaitso.engine import Engine, EngineArgs, Inputs, format_elapsed
 from sbaitso.events import Line, Quit, Say
+
+
+def test_debug_elapsed_format_uses_seconds_after_one_second():
+    assert format_elapsed(999.9) == "999.9 ms"
+    assert format_elapsed(1000) == "1.00 s"
+    assert format_elapsed(1234.5) == "1.23 s"
 
 
 @pytest.mark.asyncio
