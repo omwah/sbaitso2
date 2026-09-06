@@ -10,6 +10,7 @@ import asyncio
 import json
 import random
 import re
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 
@@ -363,7 +364,11 @@ class Engine:
                         )
                         yield Line(" [LLM DEBUG] END REQUEST", color="yellow")
 
+                request_started = time.perf_counter()
+                first_chunk_at: float | None = None
                 async for delta in brain.stream(messages, ctx):
+                    if first_chunk_at is None:
+                        first_chunk_at = time.perf_counter()
                     if self.args.debug_llm and streaming:
                         yield Line(
                             f" [LLM DEBUG] {brain.name} RESPONSE CHUNK: "
@@ -428,6 +433,17 @@ class Engine:
                     yield Say("", reveal=False)
                 elif flushed:
                     yield Say("", reveal=False)
+                if self.args.debug_llm and streaming:
+                    completed_ms = (time.perf_counter() - request_started) * 1000
+                    first_chunk = (
+                        f"{(first_chunk_at - request_started) * 1000:.1f} ms"
+                        if first_chunk_at is not None else "NO CHUNK"
+                    )
+                    yield Line(
+                        f" [LLM DEBUG] {brain.name} TIMING: FIRST CHUNK "
+                        f"{first_chunk}; RESPONSE COMPLETE {completed_ms:.1f} ms",
+                        color="yellow",
+                    )
                 if got_any:
                     return
             except Exception:
