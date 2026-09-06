@@ -51,9 +51,8 @@ Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [N]`, `VOICE ON|
 `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
 `EXIT`.
 
-Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to 16 turns;
-set `--patient-llm-max-turns <N>` when starting the native client or web server
-to configure its allowed maximum (256 by default).
+Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to 8 turns;
+an explicit count may be from 1 to 256 turns.
 
 ## Voice
 

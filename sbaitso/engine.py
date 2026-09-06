@@ -76,7 +76,6 @@ class EngineArgs:
     debug_llm: bool = False
     # Internal switch: deliberately not exposed through CLI or REPL commands.
     strip_response_boundary_whitespace: bool = True
-    patient_llm_max_turns: int = 256
 
 
 _SENTENCE_END = re.compile(r"[.!?]+\s|\n")
@@ -191,7 +190,7 @@ class Engine:
             brain.down = True
         return None
 
-    async def autonomous_patient_session(self, turns: int = 16) -> AsyncIterator:
+    async def autonomous_patient_session(self, turns: int = 8) -> AsyncIterator:
         """Run a finite LLM-patient / Retro-doctor demonstration in RAM."""
         patient_brain = await self._patient_llm_brain()
         if patient_brain is None:

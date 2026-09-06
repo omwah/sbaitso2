@@ -123,13 +123,28 @@ async def test_brain_retro_switch_adds_retro_to_an_explicit_brain_session():
     assert "RETRO MODE ENGAGED" in " ".join(says_of(ev))
 
 
-async def test_patient_llm_turn_limit_comes_from_engine_configuration():
+async def test_patient_llm_turn_limit_is_a_fixed_constant():
     from sbaitso.engine import Engine, EngineArgs
 
-    assert EngineArgs().patient_llm_max_turns == 256
-    configured = Engine.from_args(EngineArgs(brain="retro", patient_llm_max_turns=2))
-    ev = await events_of(configured, "PATIENT LLM 3")
-    assert "1 TO 2" in " ".join(says_of(ev))
+    configured = Engine.from_args(EngineArgs(brain="retro"))
+    ev = await events_of(configured, "PATIENT LLM 257")
+    assert "1 TO 256" in " ".join(says_of(ev))
+
+
+async def test_patient_llm_without_a_count_uses_its_own_default():
+    from sbaitso.engine import Engine, EngineArgs
+
+    configured = Engine.from_args(EngineArgs(brain="retro"))
+    turns = []
+
+    async def capture(requested_turns):
+        turns.append(requested_turns)
+        if False:
+            yield None
+
+    configured.autonomous_patient_session = capture
+    await events_of(configured, "PATIENT LLM")
+    assert turns == [8]
 
 
 async def test_patient_llm_runs_an_autonomous_retro_doctor_session():

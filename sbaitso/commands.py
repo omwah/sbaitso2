@@ -48,7 +48,7 @@ HELP_PAGE_3 = [
     " BRAIN            SHOW MY ACTIVE BRAIN",
     " BRAIN SCAN       RE-PROBE FOR A BETTER BRAIN",
     " BRAIN RETRO      SWITCH TO 1991 RETRO MODE",
-    " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR (CONFIGURED MAX)",
+    " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR (DEFAULT 8; MAX 256)",
     " COLOR <NAME>     CGA1 CGA2 EGA VGA AMBER",
     " TOPIC <SUBJECT>  FOCUS OUR CONVERSATION",
     " DEFRAG           COMPACT MY MEMORY",
@@ -66,6 +66,10 @@ _PLAIN_COMMANDS = {
     "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "MSD", "DEFRAG",
     "EXIT", "QUIT", "SBIASTO", "SIG", "VOICE",
 }
+
+DEFAULT_PATIENT_LLM_TURNS = 8
+MAX_PATIENT_LLM_TURNS = 256
+
 
 _PREFIX_COMMANDS = (
     "SAY ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
@@ -278,18 +282,18 @@ class CommandVM:
 
     async def _patient_llm(self, argument: str) -> AsyncIterator:
         if not argument:
-            turns = 16
+            turns = DEFAULT_PATIENT_LLM_TURNS
         else:
             try:
                 turns = int(argument)
             except ValueError:
                 yield Say(
-                    f"USAGE: PATIENT LLM [1 TO {self.engine.args.patient_llm_max_turns} TURNS]."
+                    f"USAGE: PATIENT LLM [1 TO {MAX_PATIENT_LLM_TURNS} TURNS]."
                 )
                 return
-        if not 1 <= turns <= self.engine.args.patient_llm_max_turns:
+        if not 1 <= turns <= MAX_PATIENT_LLM_TURNS:
             yield Say(
-                f"PATIENT LLM ACCEPTS 1 TO {self.engine.args.patient_llm_max_turns} TURNS."
+                f"PATIENT LLM ACCEPTS 1 TO {MAX_PATIENT_LLM_TURNS} TURNS."
             )
             return
         async for ev in self.engine.autonomous_patient_session(turns):

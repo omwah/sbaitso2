@@ -287,7 +287,6 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         palette=args.color,
         fast=args.fast,
         debug_llm=getattr(args, "debug_llm", False),
-        patient_llm_max_turns=args.patient_llm_max_turns,
     )
 
 
@@ -356,10 +355,6 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--color", choices=list(PALETTE_FG), default="vga")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
-        sp.add_argument(
-            "--patient-llm-max-turns", type=int, default=256,
-            help="maximum turns accepted by PATIENT LLM (default: 256)",
-        )
 
     serve = sub.add_parser("serve", help="run the web frontend")
     common(serve)
