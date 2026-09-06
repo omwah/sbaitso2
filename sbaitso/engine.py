@@ -22,7 +22,7 @@ from .llm import OllamaClient, RemoteClient
 from .memory import Fact, SessionMemory
 from .persona import assemble_messages
 from .retro import RetroEngine
-from .safety import crisis_response, is_crisis, is_swear, sass_response
+from .safety import crisis_response, is_crisis, is_swear, swear_response
 
 
 class Inputs:
@@ -295,7 +295,10 @@ class Engine:
     async def handle(self, line: str) -> AsyncIterator:
         line = line.strip()
         if not line:
-            yield Say(f"SAY SOMETHING, {self._name()}.")
+            if isinstance(self.brain, RetroBrain):
+                yield Say(self.brain.retro.respond("", self.memory.name))
+            else:
+                yield Say(f"SAY SOMETHING, {self._name()}.")
             return
 
         low = line.lower()
@@ -311,7 +314,8 @@ class Engine:
                 yield ev
             return
 
-        # swearing: sass first, crash after three
+        # Documented 1991-style warnings precede the original third-strike
+        # PARITY theater.
         if is_swear(low):
             self.swears += 1
             if self.swears >= 3:
@@ -319,7 +323,7 @@ class Engine:
                     yield ev
                 self.swears = 0
             else:
-                yield Say(sass_response(self._name(), self.settings.sass))
+                yield Say(swear_response(self._name(), self.rng))
             return
 
         # commands first — they work in every brain mode

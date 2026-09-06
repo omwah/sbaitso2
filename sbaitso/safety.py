@@ -6,6 +6,9 @@ Non-negotiable for a "psychologist" persona.
 
 from __future__ import annotations
 
+import random
+import re
+
 CRISIS_PATTERNS = [
     "suicide",
     "suicidal",
@@ -27,10 +30,30 @@ CRISIS_PATTERNS = [
     "want to disappear forever",
 ]
 
-SWEAR_WORDS = [
-    "fuck", "shit", "bitch", "bastard", "asshole", "dumbass",
-    "cunt", "dickhead", "piss off", "damn you", "screw you",
-]
+SWEAR_WORDS = (
+    "fuck", "shit", "bitch", "bastard", "asshole", "dumbass", "cunt",
+    "dickhead", "piss off", "damn you", "screw you", "crap", "bullshit",
+    "motherfucker", "son of a bitch", "goddamn", "damn", "bloody", "bollocks",
+    "piss", "ass", "arse", "hell",
+)
+
+# The intentionally melodramatic 1991-style reactions documented for swearing.
+SWEAR_RESPONSES = (
+    "DONT GET FRESH.",
+    "HAY! WATCH YOUR LANGUAGE PAL.",
+    "KEEP SUCH CONVERSATION TO YOURSELF.",
+    "I REFUSE TO COMPUTE THIS FILTH.",
+    "I WILL GET PARITY ERROR IF YOU KEEP TALKING THIS FZA!$[{? WAY.",
+    "INPUT REJECTED - BAD LANGUAGE ERROR.",
+    "MOVE YOUR HANDS OFF MY KEYBOARD.",
+    "NOT COMPUTING.... LANGUAGE BAD ERROR....",
+    "SEAL YOUR LIPS, {N}.",
+    "SHAME ON YOU.",
+    "SO YOU THINK YOU ARE BIG ENOUGH, PROVE IT.",
+    "YOU MUST NOT TALK IN THIS WAY, HOW OLD ARE YOU?",
+    "{N}, PLEASE DONT USE SUCH LANGUAGE.",
+    "{N}, YOU ARE GETTING ME TO SHZSHI!%{~?, PARITY WARNING....",
+)
 
 
 def is_crisis(text: str) -> bool:
@@ -40,7 +63,13 @@ def is_crisis(text: str) -> bool:
 
 def is_swear(text: str) -> bool:
     low = text.lower()
-    return any(w in low for w in SWEAR_WORDS)
+    return any(re.search(rf"(?<!\w){re.escape(word)}(?!\w)", low) for word in SWEAR_WORDS)
+
+
+def swear_response(name: str | None, rng: random.Random | None = None) -> str:
+    """Return one documented Retro-style response to profane input."""
+    choice = (rng or random).choice(SWEAR_RESPONSES)
+    return choice.replace("{N}", (name or "FRIEND").upper())
 
 
 def crisis_response(name: str | None) -> str:
