@@ -24,6 +24,8 @@ const COLORS = {
   green: "\x1b[92m", red: "\x1b[91m", dim: "\x1b[90m",
 };
 const RESET = "\x1b[0m";
+const SAY_WRAP_WIDTH = 72;
+let sayColumn = 0;
 
 const term = new window.Terminal({
   cursorBlink: true,
@@ -145,6 +147,7 @@ async function handle(ev) {
     case "line":
       if (ev.delay_ms) await sleep(ev.delay_ms);
       term.write((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
+      sayColumn = 0;
       break;
     case "say": {
       if (ev.delay_ms) await sleep(ev.delay_ms);
@@ -172,10 +175,12 @@ async function handle(ev) {
       break;
     case "clear":
       term.clear();
+      sayColumn = 0;
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
       term.write("\r\n" + COLORS.dim + label + "> " + RESET);
+      sayColumn = 0;
       inputEnabled = true;
       break;
     }
@@ -209,6 +214,21 @@ async function handle(ev) {
   }
 }
 
+function writeWrapped(ch) {
+  if (ch === "\n") {
+    term.write("\r\n");
+    sayColumn = 0;
+    return;
+  }
+  if (sayColumn >= SAY_WRAP_WIDTH) {
+    term.write("\r\n");
+    sayColumn = 0;
+    if (ch === " ") return;
+  }
+  term.write(ch);
+  sayColumn += 1;
+}
+
 async function typeOut(
   text, reveal, echoVoice, spokenSec, partial = false, lineEnd = true
 ) {
@@ -222,14 +242,17 @@ async function typeOut(
       perChar = Math.min(45, Math.max(6, (spokenSec * 1000) / text.length));
     }
     for (const ch of text) {
-      term.write(ch);
+      writeWrapped(ch);
       await sleep(perChar);
     }
   } else {
-    term.write(text);
+    for (const ch of text) writeWrapped(ch);
   }
   term.write(RESET);
-  if (lineEnd) term.write("\r\n");
+  if (lineEnd) {
+    term.write("\r\n");
+    sayColumn = 0;
+  }
   // Let longer utterances finish before the next line starts.
   if (!partial && spokenSec > 0) {
     const typed = (reveal ? perChar * text.length : 0) / 1000;
