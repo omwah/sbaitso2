@@ -77,6 +77,12 @@ async def test_debug_llm_emits_outbound_payload_without_headers(
         if isinstance(event, Line) and "RESPONSE CHUNK:" in event.text
     )
     assert chunk_line.text.endswith('"DEBUG RESPONSE."')
+    timing_line = next(
+        event for event in events
+        if isinstance(event, Line) and "TIMING: FIRST CHUNK" in event.text
+    )
+    assert "RESPONSE COMPLETE" in timing_line.text
+    assert events.index(timing_line) > events.index(chunk_line)
 
 
 @pytest.mark.asyncio
