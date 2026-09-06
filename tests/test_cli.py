@@ -2,8 +2,13 @@ import re
 
 import pytest
 
-from sbaitso.cli import Renderer
+from sbaitso.cli import Renderer, build_parser, engine_args_from_namespace
 from sbaitso.events import Prompt, Say
+
+
+def test_color_option_configures_the_engine_palette():
+    args = build_parser().parse_args(["run", "--color", "amber"])
+    assert engine_args_from_namespace(args).palette == "amber"
 
 
 @pytest.mark.asyncio

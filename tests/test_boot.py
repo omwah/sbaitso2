@@ -2,7 +2,7 @@ import pytest
 
 from sbaitso.boot import greeting_events, retro_warning
 from sbaitso.engine import Engine, EngineArgs, Inputs
-from sbaitso.events import Line, Say
+from sbaitso.events import Line, Palette, Say
 
 
 def test_retro_warning_has_a_blank_line_before_the_doctor_speaks():
@@ -25,6 +25,18 @@ def test_greeting_formats_as_one_wrapped_response():
         "MEMORY CONTENTS WILL BE WIPED OFF AFTER YOU LEAVE. "
         "MAKE THIS SESSION COUNT. WHAT IS YOUR NAME?"
     )
+
+
+@pytest.mark.asyncio
+async def test_boot_emits_configured_color_before_boot_output():
+    engine = Engine.from_args(EngineArgs(brain="retro", palette="amber"))
+    inputs = Inputs()
+    inputs.close()
+    events = [event async for event in engine.run(inputs)]
+
+    assert isinstance(events[0], Palette)
+    assert events[0].name == "amber"
+    assert events[0].announce is False
 
 
 @pytest.mark.asyncio

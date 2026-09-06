@@ -75,6 +75,7 @@ class Palette(Event):
     """Switch color theme: cga1|cga2|ega|vga|amber."""
 
     name: str = "cga1"
+    announce: bool = True
     delay_ms: int = 0
 
 

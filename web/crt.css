@@ -42,6 +42,60 @@ html, body {
   background-color: transparent !important;
 }
 
+/* Amber is a monochrome phosphor display, not just an orange palette. */
+body.amber-display {
+  background: #170400;
+}
+
+body.amber-display #screen {
+  background:
+    radial-gradient(ellipse at 44% 38%, rgba(120, 28, 4, 0.24), transparent 62%),
+    #160400;
+  box-shadow:
+    0 0 44px rgba(18, 0, 0, 0.94),
+    0 0 14px rgba(214, 71, 10, 0.16),
+    inset 0 0 90px rgba(26, 2, 0, 0.75);
+}
+
+body.amber-display #terminal .xterm-screen canvas {
+  filter: drop-shadow(0 0 1.5px rgba(255, 116, 24, 0.5));
+}
+
+body.amber-display #scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(82, 14, 0, 0) 0px,
+    rgba(82, 14, 0, 0) 2px,
+    rgba(45, 4, 0, 0.24) 3px,
+    rgba(82, 14, 0, 0) 4px
+  );
+}
+
+body.amber-display #controls-toggle,
+body.amber-display #control-drawer button,
+body.amber-display #control-drawer,
+body.amber-display .voice-controls output {
+  color: rgba(255, 179, 71, 0.78);
+}
+
+body.amber-display #control-drawer {
+  border-color: rgba(255, 179, 71, 0.28);
+  background: rgba(25, 4, 0, 0.84);
+}
+
+body.amber-display #control-drawer .sound-toggle {
+  border-color: rgba(255, 179, 71, 0.5);
+  background: rgba(255, 129, 25, 0.2);
+}
+
+body.amber-display .toggle-knob {
+  background: #ffb347;
+}
+
+body.amber-display .voice-controls input[type="range"] {
+  accent-color: #ffb347;
+}
+
 /* Hidden CRT-style control drawer; additional controls can live here. */
 #controls-toggle,
 #control-drawer button {
