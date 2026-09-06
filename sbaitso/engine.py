@@ -7,6 +7,7 @@ Inputs is an async iterator of user lines (None closes the session).
 from __future__ import annotations
 
 import asyncio
+import json
 import random
 import re
 from collections.abc import AsyncIterator
@@ -72,6 +73,7 @@ class EngineArgs:
     palette: str = "cga1"
     allow_shell: bool = False
     fast: bool = False
+    debug_llm: bool = False
 
 
 _SENTENCE_END = re.compile(r"[.!?]+\s|\n")
@@ -343,6 +345,18 @@ class Engine:
                 continue
             buf = ""
             got_any = False
+            if self.args.debug_llm:
+                payload = await brain.request_payload(messages)
+                if payload is not None:
+                    yield Line(
+                        f" [LLM DEBUG] {brain.name} REQUEST JSON (NO HEADERS):",
+                        color="yellow",
+                    )
+                    yield Line(
+                        json.dumps(payload, indent=2, ensure_ascii=False),
+                        color="dim",
+                    )
+                    yield Line(" [LLM DEBUG] END REQUEST", color="yellow")
             try:
                 async for delta in brain.stream(messages, ctx):
                     buf += delta

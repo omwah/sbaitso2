@@ -23,6 +23,10 @@ class BrainContext:
 class Brain:
     name: str = "BRAIN"
 
+    async def request_payload(self, messages: list[dict]) -> dict | None:
+        """Return the outbound LLM JSON body for opt-in diagnostics."""
+        return None
+
     async def healthy(self) -> bool:  # pragma: no cover - overridden
         return False
 
@@ -38,6 +42,13 @@ class OllamaBrain(Brain):
         self.name = "OLLAMA"
         self.down = False
 
+    async def request_payload(self, messages: list[dict]) -> dict:
+        return {
+            "model": await self.client.resolve_model(),
+            "messages": messages,
+            "stream": True,
+        }
+
     async def healthy(self) -> bool:
         return await self.client.healthy()
 
@@ -51,6 +62,13 @@ class RemoteBrain(Brain):
         self.client = client
         self.name = "REMOTE MAINFRAME"
         self.down = False
+
+    async def request_payload(self, messages: list[dict]) -> dict:
+        return {
+            "model": self.client.model,
+            "messages": messages,
+            "stream": True,
+        }
 
     async def healthy(self) -> bool:
         return await self.client.healthy()
