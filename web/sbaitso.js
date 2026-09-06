@@ -24,7 +24,6 @@ const COLORS = {
   green: "\x1b[92m", red: "\x1b[91m", dim: "\x1b[90m",
 };
 const RESET = "\x1b[0m";
-const SAY_WRAP_WIDTH = 72;
 let sayColumn = 0;
 let sayWord = "";
 
@@ -238,14 +237,21 @@ async function writeSayChar(ch, reveal, perChar) {
   if (reveal) await sleep(perChar);
 }
 
+function currentWrapWidth() {
+  // FitAddon recalculates this from the usable viewport on every resize.
+  return Math.max(1, term.cols || 72);
+}
+
 async function flushSayWord(reveal, perChar) {
   if (!sayWord) return;
-  if (sayColumn && sayColumn + sayWord.length > SAY_WRAP_WIDTH) {
+  let wrapWidth = currentWrapWidth();
+  if (sayColumn && sayColumn + sayWord.length > wrapWidth) {
     writeOutput("\r\n");
     sayColumn = 0;
   }
   for (const ch of sayWord) {
-    if (sayColumn >= SAY_WRAP_WIDTH) {
+    wrapWidth = currentWrapWidth();
+    if (sayColumn >= wrapWidth) {
       writeOutput("\r\n");
       sayColumn = 0;
     }
@@ -262,7 +268,7 @@ async function writeWrappedText(text, reveal, perChar) {
       sayColumn = 0;
     } else if (/\s/.test(ch)) {
       await flushSayWord(reveal, perChar);
-      if (sayColumn < SAY_WRAP_WIDTH) await writeSayChar(ch, reveal, perChar);
+      if (sayColumn < currentWrapWidth()) await writeSayChar(ch, reveal, perChar);
     } else {
       sayWord += ch;
     }
