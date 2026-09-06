@@ -30,6 +30,7 @@ class Line(Event):
     text: str = ""
     color: str = "white"  # white|cyan|yellow|green|red|dim
     reveal: bool = False
+    wrap: bool = False
     delay_ms: int = 0
 
 
@@ -74,7 +75,7 @@ class Bell(Event):
 class Palette(Event):
     """Switch color theme: cga1|cga2|ega|vga|amber."""
 
-    name: str = "cga1"
+    name: str = "vga"
     announce: bool = True
     delay_ms: int = 0
 

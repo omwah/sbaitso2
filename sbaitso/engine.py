@@ -50,7 +50,7 @@ class Inputs:
 @dataclass
 class Settings:
     sass: str = "NORMAL"
-    palette: str = "cga1"
+    palette: str = "vga"
     echo_on: bool = False
     tone: int = 1
     volume: int = 5
@@ -71,7 +71,7 @@ class EngineArgs:
     remote_model: str | None = None
     remote_key: str | None = None
     sass: str = "NORMAL"
-    palette: str = "cga1"
+    palette: str = "vga"
     fast: bool = False
     debug_llm: bool = False
     # Internal switch: deliberately not exposed through CLI or REPL commands.
