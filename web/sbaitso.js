@@ -24,6 +24,7 @@ const COLORS = {
   green: "\x1b[92m", red: "\x1b[91m", dim: "\x1b[90m",
 };
 const RESET = "\x1b[0m";
+const RESPONSE_INDENT = " ";  // match the boot banner's one-character gutter
 let sayColumn = 0;
 let sayWord = "";
 
@@ -197,7 +198,7 @@ async function handle(ev) {
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
-      writeOutput("\r\n" + COLORS.dim + label + "> " + RESET);
+      writeOutput("\r\n" + RESPONSE_INDENT + COLORS.dim + label + "> " + RESET);
       sayColumn = 0;
       sayWord = "";
       inputEnabled = true;
@@ -233,6 +234,13 @@ async function handle(ev) {
   }
 }
 
+function ensureResponseIndent() {
+  if (sayColumn === 0) {
+    writeOutput(RESPONSE_INDENT);
+    sayColumn = RESPONSE_INDENT.length;
+  }
+}
+
 async function writeSayChar(ch, reveal, perChar) {
   writeOutput(ch);
   sayColumn += 1;
@@ -251,11 +259,13 @@ async function flushSayWord(reveal, perChar) {
     writeOutput("\r\n");
     sayColumn = 0;
   }
+  ensureResponseIndent();
   for (const ch of sayWord) {
     wrapWidth = currentWrapWidth();
     if (sayColumn >= wrapWidth) {
       writeOutput("\r\n");
       sayColumn = 0;
+      ensureResponseIndent();
     }
     await writeSayChar(ch, reveal, perChar);
   }
