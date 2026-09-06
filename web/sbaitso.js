@@ -32,6 +32,7 @@ const COLORS = {
 const RESET = "\x1b[0m";
 const RESPONSE_INDENT = " ";  // match the boot banner's one-character gutter
 const RESPONSE_RIGHT_GUTTER_COLUMNS = 3;
+const SAY_WRAP_WIDTH = 72;
 let sayColumn = 0;
 let sayWord = "";
 
@@ -347,9 +348,12 @@ async function writeSayChar(ch, reveal, perChar) {
 }
 
 function currentWrapWidth() {
-  // FitAddon recalculates this from the usable viewport on every resize.
-  // Keep a matching visible gutter at the right edge of response text.
-  return Math.max(1, (term.cols || 72) - RESPONSE_RIGHT_GUTTER_COLUMNS);
+  // Match the CLI's 72-column response width, while FitAddon still reduces
+  // it for a narrow viewport and preserves the visible right-side gutter.
+  return Math.max(
+    1,
+    Math.min(SAY_WRAP_WIDTH, (term.cols || SAY_WRAP_WIDTH) - RESPONSE_RIGHT_GUTTER_COLUMNS)
+  );
 }
 
 async function flushSayWord(reveal, perChar) {
