@@ -93,24 +93,16 @@ let keyclickOn = false;
 
 /* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
 const SAM_RATE = 22050;
-const voice = { on: true, tone: 1, volume: 5, pitch: 5, speed: 5 };
+const voice = { on: true, volume: 5, pitch: 64, speed: 72, mouth: 128, throat: 128 };
+const SAM_PRESETS = { sam:[72,64,128,128], elf:[72,64,110,160], robot:[92,60,190,190], stuffy:[82,72,110,105], lady:[82,32,145,145], alien:[100,64,150,200] };
 const controlsToggle = document.getElementById("controls-toggle");
 const controlsClose = document.getElementById("controls-close");
 const controlDrawer = document.getElementById("control-drawer");
 const voiceToggle = document.getElementById("voice-toggle");
 const keyclickToggle = document.getElementById("keyclick-toggle");
-const voiceControls = {
-  tone: document.getElementById("tone-control"),
-  volume: document.getElementById("volume-control"),
-  pitch: document.getElementById("pitch-control"),
-  speed: document.getElementById("speed-control"),
-};
-const voiceValues = {
-  tone: document.getElementById("tone-value"),
-  volume: document.getElementById("volume-value"),
-  pitch: document.getElementById("pitch-value"),
-  speed: document.getElementById("speed-value"),
-};
+const presetControl = document.getElementById("preset-control");
+const voiceControls = { speed: document.getElementById("speed-control"), pitch: document.getElementById("pitch-control"), mouth: document.getElementById("mouth-control"), throat: document.getElementById("throat-control") };
+const voiceValues = { speed: document.getElementById("speed-value"), pitch: document.getElementById("pitch-value"), mouth: document.getElementById("mouth-value"), throat: document.getElementById("throat-value") };
 function setControlsOpen(open) {
   controlDrawer.hidden = !open;
   controlDrawer.classList.toggle("open", open);
@@ -184,21 +176,15 @@ for (const [name, control] of Object.entries(voiceControls)) {
 
 syncVoiceControls();
 syncKeyclickToggle();
+presetControl.addEventListener("change", () => {
+  const [speed, pitch, mouth, throat] = SAM_PRESETS[presetControl.value];
+  Object.assign(voice, { speed, pitch, mouth, throat });
+  syncVoiceControls();
+});
 
 function samParams(echo) {
-  // .PITCH 0-9 -> sam pitch ~20..100 (default 5 ~= 65, close to S.A.M.'s 64)
-  // .SPEED 0-9 -> sam speed ~50..95  (default 5 ~= 75, near S.A.M.'s 72)
-  const pitch = echo ? 100 + voice.pitch * 6 : 20 + voice.pitch * 9;
-  const speed = echo ? 90 + voice.speed * 4 : 50 + voice.speed * 5;
-  // .TONE 0=bass / 1=treble -> formant presets
-  let mouth = 128, throat = 128;
-  if (!echo) {
-    if (voice.tone === 0) { mouth = 110; throat = 190; }  // bass
-    else                  { mouth = 150; throat = 110; }  // treble
-  } else {
-    mouth = 170; throat = 90;  // the .ECHO second voice: distinct & nasal
-  }
-  return { pitch, speed, mouth, throat };
+  if (echo) return { pitch: 100, speed: 90, mouth: 170, throat: 90 };
+  return { pitch: voice.pitch, speed: voice.speed, mouth: voice.mouth, throat: voice.throat };
 }
 
 let audioCtx = null;
