@@ -13,7 +13,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2vh 2vw;
+  padding: 2vh 2vw 6vh;
   box-sizing: border-box;
 }
 
@@ -32,7 +32,7 @@ html, body {
 #terminal {
   width: 100%;
   height: 100%;
-  padding: 12px;
+  padding: 16px 18px 32px;
   box-sizing: border-box;
 }
 

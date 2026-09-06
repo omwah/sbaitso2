@@ -42,6 +42,19 @@ term.open(document.getElementById("terminal"));
 fitAddon.fit();
 window.addEventListener("resize", () => fitAddon.fit());
 
+let followFrame = 0;
+function followOutput() {
+  if (followFrame) return;
+  followFrame = requestAnimationFrame(() => {
+    followFrame = 0;
+    term.scrollToBottom();
+  });
+}
+function writeOutput(text) {
+  term.write(text);
+  followOutput();
+}
+
 let sayColor = COLORS.cyan;
 let inputEnabled = false;
 let inputBuffer = "";
@@ -147,7 +160,7 @@ async function handle(ev) {
   switch (ev.type) {
     case "line":
       if (ev.delay_ms) await sleep(ev.delay_ms);
-      term.write((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
+      writeOutput((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
       sayColumn = 0;
       sayWord = "";
       break;
@@ -177,12 +190,13 @@ async function handle(ev) {
       break;
     case "clear":
       term.clear();
+      followOutput();
       sayColumn = 0;
       sayWord = "";
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
-      term.write("\r\n" + COLORS.dim + label + "> " + RESET);
+      writeOutput("\r\n" + COLORS.dim + label + "> " + RESET);
       sayColumn = 0;
       sayWord = "";
       inputEnabled = true;
@@ -203,11 +217,11 @@ async function handle(ev) {
       inputEnabled = false;
       dead = true;
       if (ev.error) {
-        term.write("\r\n" + COLORS.red +
+        writeOutput("\r\n" + COLORS.red +
           " STARTUP FAILED. THE REQUESTED BRAIN IS UNAVAILABLE.\r\n" +
           " REFRESH AFTER CORRECTING THE BRAIN CONFIGURATION.\r\n" + RESET);
       } else {
-        term.write("\r\n" + COLORS.yellow +
+        writeOutput("\r\n" + COLORS.yellow +
           " SESSION ENDED. AS PROMISED, I REMEMBER NOTHING.\r\n" +
           " REFRESH THE PAGE TO BEGIN ANEW.\r\n" + RESET);
       }
@@ -219,7 +233,7 @@ async function handle(ev) {
 }
 
 async function writeSayChar(ch, reveal, perChar) {
-  term.write(ch);
+  writeOutput(ch);
   sayColumn += 1;
   if (reveal) await sleep(perChar);
 }
@@ -227,12 +241,12 @@ async function writeSayChar(ch, reveal, perChar) {
 async function flushSayWord(reveal, perChar) {
   if (!sayWord) return;
   if (sayColumn && sayColumn + sayWord.length > SAY_WRAP_WIDTH) {
-    term.write("\r\n");
+    writeOutput("\r\n");
     sayColumn = 0;
   }
   for (const ch of sayWord) {
     if (sayColumn >= SAY_WRAP_WIDTH) {
-      term.write("\r\n");
+      writeOutput("\r\n");
       sayColumn = 0;
     }
     await writeSayChar(ch, reveal, perChar);
@@ -244,7 +258,7 @@ async function writeWrappedText(text, reveal, perChar) {
   for (const ch of text) {
     if (ch === "\n") {
       await flushSayWord(reveal, perChar);
-      term.write("\r\n");
+      writeOutput("\r\n");
       sayColumn = 0;
     } else if (/\s/.test(ch)) {
       await flushSayWord(reveal, perChar);
@@ -259,7 +273,7 @@ async function typeOut(
   text, reveal, echoVoice, spokenSec, partial = false, lineEnd = true
 ) {
   const color = echoVoice ? COLORS.dim : sayColor;
-  term.write(color);
+  writeOutput(color);
   let perChar = 14;
   // Complete sentences pace to speech. Streamed partial text remains brisk
   // so the user sees model progress instead of waiting for a period.
@@ -268,9 +282,9 @@ async function typeOut(
   }
   await writeWrappedText(text, reveal, perChar);
   if (lineEnd) await flushSayWord(reveal, perChar);
-  term.write(RESET);
+  writeOutput(RESET);
   if (lineEnd) {
-    term.write("\r\n");
+    writeOutput("\r\n");
     sayColumn = 0;
   }
   // Let longer utterances finish before the next line starts.
@@ -318,7 +332,7 @@ function connect() {
   };
   ws.onclose = () => {
     if (!dead) {
-      term.write("\r\n\x1b[91m CONNECTION LOST. REFRESH TO TRY AGAIN.\x1b[0m\r\n");
+      writeOutput("\r\n\x1b[91m CONNECTION LOST. REFRESH TO TRY AGAIN.\x1b[0m\r\n");
     }
   };
 }
