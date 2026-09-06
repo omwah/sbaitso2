@@ -364,6 +364,12 @@ class Engine:
                         yield Line(" [LLM DEBUG] END REQUEST", color="yellow")
 
                 async for delta in brain.stream(messages, ctx):
+                    if self.args.debug_llm and streaming:
+                        yield Line(
+                            f" [LLM DEBUG] {brain.name} RESPONSE CHUNK: "
+                            f"{json.dumps(delta, ensure_ascii=False)}",
+                            color="dim",
+                        )
                     buf += delta
                     while (match := _SENTENCE_END.search(buf)) is not None:
                         raw_sentence = buf[: match.end()]

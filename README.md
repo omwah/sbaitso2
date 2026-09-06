@@ -36,8 +36,9 @@ Useful flags: `--brain auto|retro|ollama|remote`, `--model NAME`,
 `--sass LOW|NORMAL|HIGH`, `--palette CGA1|CGA2|EGA|VGA|AMBER`, `--doshell`.
 Only `--brain auto` uses the fallback ladder; an explicitly requested
 `ollama` or `remote` brain exits with an error if it cannot be reached.
-In the native frontend, `--debug-llm` prints the outbound JSON request for
-Ollama or remote calls (messages and model only; never authorization headers).
+In the native frontend, `--debug-llm` prints the outbound JSON request and
+escaped inbound response chunks for Ollama or remote calls (messages and model
+only; never authorization headers).
 
 ## Commands
 
