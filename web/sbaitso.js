@@ -199,7 +199,7 @@ async function handle(ev) {
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
-      writeOutput("\r\n" + RESPONSE_INDENT + COLORS.dim + label + "> " + RESET);
+      writeOutput(RESPONSE_INDENT + COLORS.dim + label + "> " + RESET);
       sayColumn = 0;
       sayWord = "";
       inputEnabled = true;
