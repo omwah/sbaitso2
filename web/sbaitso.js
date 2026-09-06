@@ -89,6 +89,7 @@ let sayColor = COLORS.white;
 let inputEnabled = false;
 let inputBuffer = "";
 let dead = false;
+let keyclickOn = true;
 
 /* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
 const SAM_RATE = 22050;
@@ -96,6 +97,7 @@ const voice = { on: true, tone: 1, volume: 5, pitch: 5, speed: 5 };
 const controlsToggle = document.getElementById("controls-toggle");
 const controlDrawer = document.getElementById("control-drawer");
 const voiceToggle = document.getElementById("voice-toggle");
+const keyclickToggle = document.getElementById("keyclick-toggle");
 const voiceControls = {
   tone: document.getElementById("tone-control"),
   volume: document.getElementById("volume-control"),
@@ -153,6 +155,16 @@ voiceToggle.addEventListener("click", () => {
   setControlsOpen(false);
 });
 
+function syncKeyclickToggle() {
+  keyclickToggle.setAttribute("aria-checked", String(keyclickOn));
+  keyclickToggle.setAttribute("aria-label", keyclickOn ? "Disable keyclick" : "Enable keyclick");
+}
+
+keyclickToggle.addEventListener("click", () => {
+  keyclickOn = !keyclickOn;
+  syncKeyclickToggle();
+});
+
 function syncVoiceControls() {
   for (const [name, control] of Object.entries(voiceControls)) {
     control.value = voice[name];
@@ -170,6 +182,7 @@ for (const [name, control] of Object.entries(voiceControls)) {
 }
 
 syncVoiceControls();
+syncKeyclickToggle();
 
 function samParams(echo) {
   // .PITCH 0-9 -> sam pitch ~20..100 (default 5 ~= 65, close to S.A.M.'s 64)
@@ -293,6 +306,10 @@ async function handle(ev) {
       );
       break;
     }
+    case "keyclickmode":
+      keyclickOn = ev.on;
+      syncKeyclickToggle();
+      break;
     case "beep":
       beep(ev.freq, ev.ms);
       if (ev.delay_ms) await sleep(ev.delay_ms);
@@ -443,6 +460,7 @@ async function typeOut(
 term.onData((data) => {
   if (!inputEnabled || dead) return;
   for (const ch of data) {
+    if (keyclickOn) beep(800, 12);
     if (ch === "\r") {
       const line = inputBuffer;
       inputBuffer = "";
