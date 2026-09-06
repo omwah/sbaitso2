@@ -364,24 +364,24 @@ sbaitso2/
 ## 6. Roadmap
 
 ### Phase 0 — Skeleton (half a day)
-- [ ] Core `Engine` + adapter contract (print/read/stream/beep/palette)
-- [ ] FastAPI app serving static `web/` + websocket endpoint
-- [ ] xterm.js page with CGA blue palette, CRT scanlines, blinking cursor
-- [ ] Boot sequence script, name prompt, runtime settings (CLI flags)
-- [ ] Echo REPL loop with all-caps formatter, in both frontends
+- [x] Core `Engine` + adapter contract (print/read/stream/beep/palette)
+- [x] FastAPI app serving static `web/` + websocket endpoint
+- [x] xterm.js page with VGA palette, CRT scanlines, blinking cursor
+- [x] Boot sequence script, name prompt, runtime settings (CLI flags)
+- [x] Echo REPL loop with all-caps formatter, in both frontends
 
 ### Phase 1 — The Brain ladder (1–2 days)
-- [ ] `BrainProvider` interface + Ollama streaming client (`httpx` → adapter)
-- [ ] Typewriter reveal synced to stream chunks
-- [ ] Sbaitso system prompt + persona tuning
-- [ ] **Retro v1 engine**: keyword/pattern matching, canned responses,
+- [x] `BrainProvider` interface + Ollama streaming client (`httpx` → adapter)
+- [x] Typewriter reveal synced to stream chunks
+- [x] Sbaitso system prompt + persona tuning
+- [x] **Retro v1 engine**: keyword/pattern matching, canned responses,
       reflections, fact-regex memory — the offline fallback
-- [ ] Boot-time brain probing, `BRAIN` / `BRAIN SCAN` commands,
+- [x] Boot-time brain probing, `BRAIN` / `BRAIN SCAN` commands,
       mid-session failover banner
-- [ ] In-session rolling summary + fact store (no save/load)
-- [ ] Authentic commands: `R`/`REP`, `SAY`, `.QUIT`, `HELP` + `M` pager,
+- [x] In-session rolling summary + fact store (no save/load)
+- [x] Authentic commands: `R`/`REP`, `SAY`, `.QUIT`, `HELP` + `M` pager,
       `.ECHO`, `.TONE/.VOLUME/.PITCH/.SPEED/.PARAM` (wired to TTS)
-- [ ] v2 commands: BRAIN, EXIT, VOICE, COLOR
+- [x] v2 commands: BRAIN, EXIT, VOICE, COLOR
 
 ### Phase 2 — The Voice (1 day)
 - [ ] sam-js integration (web); char-reveal synced to speech;
@@ -405,7 +405,6 @@ sbaitso2/
 - [ ] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
 
 ### Phase 5 — optional extras
-- [ ] Ship as a real 16-bit-style package: a bootable "install disk" page
 - [ ] Model switcher (`LOAD BIGBRAIN.SYS`), textual-based fancy TUI
 - [ ] Remote-API rung polish (provider autodetect from env keys)
 

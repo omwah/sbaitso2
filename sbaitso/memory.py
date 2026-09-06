@@ -140,6 +140,20 @@ class SessionMemory:
     def add_mood(self, score: int, label: str) -> None:
         self.moods.append(MoodEntry(self.turns, score, label))
 
+    def ingest_structured(self, data: dict) -> None:
+        """Best-effort LLM enrichment; all state remains session-local."""
+        for item in data.get("facts", []):
+            if not isinstance(item, dict):
+                continue
+            key = str(item.get("key", "")).upper().replace(" ", "_")[:24]
+            value = str(item.get("value", "")).upper()[:60]
+            if key and value and not any(f.key == key and f.value == value for f in self.facts):
+                self.facts.append(Fact(key, value, self.turns))
+        for topic in data.get("topics", []):
+            topic = str(topic).lower()[:40]
+            if topic and topic not in self.topics:
+                self.topics.append(topic)
+
     def mood_trend(self) -> str:
         if len(self.moods) < 2:
             return "TOO EARLY TO SAY" if self.moods else "UNKNOWN (YOU HAVE NOT TOLD ME)"
