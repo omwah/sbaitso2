@@ -89,12 +89,13 @@ let sayColor = COLORS.white;
 let inputEnabled = false;
 let inputBuffer = "";
 let dead = false;
-let keyclickOn = true;
+let keyclickOn = false;
 
 /* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
 const SAM_RATE = 22050;
 const voice = { on: true, tone: 1, volume: 5, pitch: 5, speed: 5 };
 const controlsToggle = document.getElementById("controls-toggle");
+const controlsClose = document.getElementById("controls-close");
 const controlDrawer = document.getElementById("control-drawer");
 const voiceToggle = document.getElementById("voice-toggle");
 const keyclickToggle = document.getElementById("keyclick-toggle");
@@ -121,6 +122,7 @@ function setControlsOpen(open) {
 controlsToggle.addEventListener("click", () => {
   setControlsOpen(controlDrawer.hidden);
 });
+controlsClose.addEventListener("click", () => setControlsOpen(false));
 
 let controlKeyUsed = false;
 document.addEventListener("keydown", (event) => {
@@ -152,7 +154,6 @@ voiceToggle.addEventListener("click", () => {
   voice.on = !voice.on;
   if (!voice.on) stopActiveSpeech();
   syncVoiceToggle();
-  setControlsOpen(false);
 });
 
 function syncKeyclickToggle() {

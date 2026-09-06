@@ -153,6 +153,18 @@ body.amber-display .voice-controls input[type="range"] {
   text-align: left;
 }
 
+#controls-close {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: auto !important;
+  padding: 0 3px !important;
+  color: rgba(180, 180, 180, 0.7);
+  font-size: 12px;
+  line-height: 12px;
+  text-align: center !important;
+}
+
 .sound-control {
   display: flex;
   align-items: center;
@@ -183,14 +195,18 @@ body.amber-display .voice-controls input[type="range"] {
   transition: transform 100ms ease-out, background 100ms ease-out;
 }
 
-#voice-toggle[aria-checked="false"] {
+#control-drawer .sound-toggle[aria-checked="false"] {
   background: rgba(0, 0, 0, 0.4);
   border-color: rgba(180, 180, 180, 0.38);
 }
 
-#voice-toggle[aria-checked="false"] .toggle-knob {
+#control-drawer .sound-toggle[aria-checked="false"] .toggle-knob {
   background: rgba(180, 180, 180, 0.65);
-  transform: translateX(0);
+  transform: translateX(0) !important;
+}
+
+#control-drawer .sound-toggle[aria-checked="true"] .toggle-knob {
+  transform: translateX(14px) !important;
 }
 
 .voice-controls {
