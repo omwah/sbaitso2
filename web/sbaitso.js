@@ -39,6 +39,8 @@ const fitAddon = new window.FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 term.open(document.getElementById("terminal"));
 fitAddon.fit();
+// xterm attaches its textarea during open(); wait one frame before focusing it.
+requestAnimationFrame(() => term.focus());
 window.addEventListener("resize", () => fitAddon.fit());
 
 let followFrame = 0;
