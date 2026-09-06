@@ -73,6 +73,25 @@ async def test_dot_volume(engine):
     assert "0 TO 9" in " ".join(says_of(ev))
 
 
+async def test_voice_command(engine):
+    from sbaitso.events import VoiceEnabled
+
+    ev = await events_of(engine, "VOICE")
+    assert "MY VOICE IS ON" in " ".join(says_of(ev))
+
+    ev = await events_of(engine, "VOICE OFF")
+    assert engine.settings.voice_on is False
+    assert any(isinstance(e, VoiceEnabled) and e.on is False for e in ev)
+    assert "I SHALL BE SILENT." in " ".join(says_of(ev))
+
+    ev = await events_of(engine, "VOICE ON")
+    assert engine.settings.voice_on is True
+    assert "I WILL SPEAK." in " ".join(says_of(ev))
+
+    ev = await events_of(engine, "VOICE MAYBE")
+    assert "ON OR OFF" in " ".join(says_of(ev))
+
+
 async def test_brain_command(engine):
     ev = await events_of(engine, "BRAIN")
     text = " ".join(says_of(ev))

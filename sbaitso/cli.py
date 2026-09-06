@@ -23,9 +23,10 @@ except ImportError:  # pragma: no cover - windows
 
 from .engine import Engine, EngineArgs, Inputs
 from .events import (
-    Bell, Beep, Clear, EchoMode, Event, Line, Palette, Prompt, Quit, Say,
-    VoiceParams,
+    Bell, Beep, Clear, Event, Line, Palette, Prompt, Quit, Say,
+    VoiceEnabled, VoiceParams,
 )
+from .voice import EspeakVoice, VoiceState, available
 
 ANSI = {
     "white": "\x1b[97m",
@@ -106,9 +107,12 @@ class KeyReader:
 
 
 class Renderer:
-    def __init__(self, fast: bool) -> None:
+    def __init__(self, fast: bool, voice: bool = True) -> None:
         self.fast = fast
         self.say_color = PALETTE_FG["cga1"]
+        self.voice_on = voice and available()
+        self.voice_state = VoiceState()
+        self.espeak = EspeakVoice() if self.voice_on else None
 
     async def render(self, ev: Event) -> None:
         if isinstance(ev, Line):
@@ -119,6 +123,11 @@ class Renderer:
             if ev.delay_ms:
                 await asyncio.sleep(ev.delay_ms / 1000)
             color = ANSI["dim"] if ev.voice == "echo" else self.say_color
+            speech = None
+            if self.espeak and self.voice_state.on:
+                speech = await self.espeak.speak(
+                    ev.text, self.voice_state, echo=ev.voice == "echo"
+                )
             if ev.reveal and not self.fast:
                 for ch in ev.text:
                     sys.stdout.write(f"{color}{ch}{RESET}")
@@ -128,6 +137,8 @@ class Renderer:
             else:
                 print(ev.text if not ev.reveal else f"{color}{ev.text}{RESET}")
             sys.stdout.flush()
+            if speech:
+                await speech
         elif isinstance(ev, (Beep, Bell)):
             sys.stdout.write("\a")
             sys.stdout.flush()
@@ -140,10 +151,11 @@ class Renderer:
         elif isinstance(ev, Prompt):
             label = (ev.label or "YOU").upper()
             print(f"{ANSI['dim']}{label}> {RESET}", end="", flush=True)
-        elif isinstance(ev, (VoiceParams, EchoMode)):
-            pass  # Phase 2: espeak-ng honors these
+        elif isinstance(ev, (VoiceParams, VoiceEnabled)):
+            self.voice_state.update(ev)
         elif isinstance(ev, Quit):
-            pass
+            if self.espeak:
+                await self.espeak.drain()
 
 
 async def _run(args: argparse.Namespace) -> None:
@@ -161,7 +173,7 @@ async def _run(args: argparse.Namespace) -> None:
     )
     engine = Engine.from_args(engine_args)
     inputs = Inputs()
-    renderer = Renderer(fast=args.fast)
+    renderer = Renderer(fast=args.fast, voice=not args.novoice)
 
     with raw_stdin() as is_tty:
         loop = asyncio.get_running_loop()
@@ -221,6 +233,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--palette", choices=list(PALETTE_FG), default="cga1")
         sp.add_argument("--doshell", action="store_true", help="enable DOSSHELL command")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
+        sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
 
     serve = sub.add_parser("serve", help="run the web frontend")
     common(serve)

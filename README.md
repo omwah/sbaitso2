@@ -41,11 +41,23 @@ Authentic (from the 1991 manual): `.QUIT`, `.READ <file>`, `.TONE 0|1`,
 `.VOLUME 0-9`, `.PITCH 0-9`, `.SPEED 0-9`, `.PARAM tvps`, `.ECHO ON/OFF`,
 `R` (repeat), `SAY <text>`, `HELP` (then `M` for pages 2 and 3).
 
-Version 2.0: `BRAIN`, `BRAIN SCAN`, `DIR`, `TYPE MEMORY.DAT`, `MOOD`,
-`TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
+Version 2.0: `BRAIN`, `BRAIN SCAN`, `VOICE ON|OFF`, `DIR`, `TYPE MEMORY.DAT`,
+`MOOD`, `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
 `DOSSHELL <cmd>` (if enabled), `EXIT`.
 
 Try `SAY PARITY` for an authentic crash.
+
+## Voice
+
+- **Web:** uses the bundled `sam-js` S.A.M. synthesizer. Speech is queued
+  line-by-line, and the typewriter reveal is paced to the generated audio.
+  Browser audio unlocks after a click or keypress; entering your name does it.
+- **Native:** uses `espeak-ng` automatically when it is installed and on
+  `PATH`; otherwise text mode continues silently. Pass `--novoice` to disable
+  it deliberately.
+- The authentic `.TONE`, `.VOLUME`, `.PITCH`, `.SPEED`, `.PARAM`, and
+  `.ECHO ON/OFF` commands drive both voice backends. `VOICE ON` / `VOICE OFF`
+  toggles synthesis without changing those settings.
 
 ## Development
 
@@ -56,14 +68,20 @@ pixi run test              # run tests (offline; Ollama probing is redirected)
 
 ## Status
 
-Phase 0 + Phase 1 complete (see `PLAN.md`):
-core engine, both frontends, brain ladder with failover, command VM,
-session memory (RAM only), safety layer, PARITY ERROR theater.
+Phase 0–2 complete (see `PLAN.md`): core engine, both frontends, brain
+ladder with failover, command VM, session memory (RAM only), safety layer,
+PARITY ERROR theater, and synchronized web/native voice backends.
 
-Phase 2 (voice: sam-js / espeak-ng), Phase 3 polish, Phase 4 extras: see plan.
+Phase 3 polish and Phase 4 extras remain.
 
 ## License & credits
 
 Dr. Sbaitso was © Creative Labs, 1991. This is an affectionate fan
 recreation. The 1991 manual scan in this folder is reference material,
 kept locally and not tracked in git.
+
+The bundled `web/vendor/samjs.min.js` is SamJs v0.3.1, © 2017–2024
+Christian Schiffler / [discordier/sam](https://github.com/discordier/sam),
+a reverse-engineered JavaScript port of Software Automatic Mouth. Its
+copyright header is retained; upstream describes the underlying original as
+abandonware and says to use it at your own risk.

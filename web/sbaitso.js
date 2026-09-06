@@ -1,7 +1,7 @@
 /* DR. SBAITSO/2 — web frontend
  * xterm.js terminal + websocket to the Python core.
- * Handles the Engine event stream: boot pacing, typewriter reveal,
- * PC-speaker beeps, palette switching.
+ * Voice: sam-js (S.A.M. port) — the typewriter reveal is paced to the
+ * synthesized speech, like the original.
  */
 
 "use strict";
@@ -44,21 +44,79 @@ let inputEnabled = false;
 let inputBuffer = "";
 let dead = false;
 
-/* ---- audio: PC speaker emulation ---- */
+/* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
+const SAM_RATE = 22050;
+const voice = { on: true, tone: 1, volume: 5, pitch: 5, speed: 5 };
+
+function samParams(echo) {
+  // .PITCH 0-9 -> sam pitch ~20..100 (default 5 ~= 65, close to S.A.M.'s 64)
+  // .SPEED 0-9 -> sam speed ~50..95  (default 5 ~= 75, near S.A.M.'s 72)
+  const pitch = echo ? 100 + voice.pitch * 6 : 20 + voice.pitch * 9;
+  const speed = echo ? 90 + voice.speed * 4 : 50 + voice.speed * 5;
+  // .TONE 0=bass / 1=treble -> formant presets
+  let mouth = 128, throat = 128;
+  if (!echo) {
+    if (voice.tone === 0) { mouth = 110; throat = 190; }  // bass
+    else                  { mouth = 150; throat = 110; }  // treble
+  } else {
+    mouth = 170; throat = 90;  // the .ECHO second voice: distinct & nasal
+  }
+  return { pitch, speed, mouth, throat };
+}
+
 let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) { return null; }
+    if (audioCtx.state === "suspended") {
+      const resume = () => { audioCtx.resume(); };
+      window.addEventListener("keydown", resume, { once: true });
+      window.addEventListener("mousedown", resume, { once: true });
+      window.addEventListener("touchstart", resume, { once: true });
+    }
+  }
+  return audioCtx;
+}
+
+/* Browsers gate audio behind a user gesture. The boot beeps usually miss
+ * the gate; conversation speech lands after the user has typed their name,
+ * so it plays. */
 function beep(freq, ms) {
+  const ctx = getAudioCtx();
+  if (!ctx || ctx.state !== "running") return;
   try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.type = "square";
     osc.frequency.value = freq;
     gain.gain.value = 0.05;
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.start();
-    setTimeout(() => { osc.stop(); }, ms);
-  } catch (e) { /* audio blocked until user gesture; fine */ }
+    setTimeout(() => osc.stop(), ms);
+  } catch (e) {}
+}
+
+/* Synthesize + play; returns the spoken duration in seconds (0 if silent). */
+function speak(text, echo) {
+  if (!voice.on || typeof window.SamJs !== "function") return 0;
+  const ctx = getAudioCtx();
+  if (!ctx || ctx.state !== "running") return 0;
+  try {
+    const sam = new window.SamJs(samParams(echo));
+    const f32 = sam.buf32(text);
+    if (!f32 || !f32.length) return 0;
+    const buffer = ctx.createBuffer(1, f32.length, SAM_RATE);
+    buffer.getChannelData(0).set(f32);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = Math.min(1.0, (voice.volume / 9) * 0.9);
+    src.connect(gain); gain.connect(ctx.destination);
+    src.start();
+    return f32.length / SAM_RATE;
+  } catch (e) { return 0; }
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -88,10 +146,13 @@ async function handle(ev) {
       if (ev.delay_ms) await sleep(ev.delay_ms);
       term.write((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
       break;
-    case "say":
+    case "say": {
       if (ev.delay_ms) await sleep(ev.delay_ms);
-      await typeOut(ev.text, ev.reveal, ev.voice);
+      const echo = ev.voice === "echo";
+      const duration = speak(ev.text, echo);
+      await typeOut(ev.text, ev.reveal, echo, duration);
       break;
+    }
     case "beep":
       beep(ev.freq, ev.ms);
       if (ev.delay_ms) await sleep(ev.delay_ms);
@@ -109,14 +170,23 @@ async function handle(ev) {
     case "clear":
       term.clear();
       break;
-    case "prompt":
+    case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
       term.write("\r\n" + COLORS.dim + label + "> " + RESET);
       inputEnabled = true;
       break;
+    }
     case "voiceparams":
+      if (ev.tone !== null && ev.tone !== undefined) voice.tone = ev.tone;
+      if (ev.volume !== null && ev.volume !== undefined) voice.volume = ev.volume;
+      if (ev.pitch !== null && ev.pitch !== undefined) voice.pitch = ev.pitch;
+      if (ev.speed !== null && ev.speed !== undefined) voice.speed = ev.speed;
+      break;
+    case "voiceenabled":
+      voice.on = ev.on;
+      break;
     case "echomode":
-      break; /* Phase 2: sam-js honors these */
+      break;
     case "quit":
       inputEnabled = false;
       dead = true;
@@ -130,18 +200,28 @@ async function handle(ev) {
   }
 }
 
-async function typeOut(text, reveal, voice) {
-  const color = voice === "echo" ? COLORS.dim : sayColor;
+async function typeOut(text, reveal, echoVoice, spokenSec) {
+  const color = echoVoice ? COLORS.dim : sayColor;
   term.write(color);
   if (reveal) {
+    // pace the reveal to the speech, clamped to sane typewriter speeds
+    let perChar = 14;
+    if (spokenSec > 0 && text.length > 0) {
+      perChar = Math.min(45, Math.max(6, (spokenSec * 1000) / text.length));
+    }
     for (const ch of text) {
       term.write(ch);
-      await sleep(14);
+      await sleep(perChar);
     }
   } else {
     term.write(text);
   }
   term.write(RESET + "\r\n");
+  // let longer utterances finish before the next line starts
+  if (spokenSec > 0) {
+    const typed = (reveal ? perChar * text.length : 0) / 1000;
+    if (spokenSec > typed) await sleep((spokenSec - typed) * 1000);
+  }
 }
 
 /* ---- input ---- */

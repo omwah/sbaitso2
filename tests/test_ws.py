@@ -64,6 +64,30 @@ def test_full_session(client):
         assert "REMEMBER NOTHING" in text
 
 
+def test_voice_events_over_websocket(client):
+    with client.websocket_connect("/ws") as ws:
+        collect_until(ws, "prompt")
+        ws.send_json({"type": "input", "text": "MIKE"})
+        collect_until(ws, "prompt")
+        ws.send_json({"type": "input", "text": "42"})
+        collect_until(ws, "prompt")
+
+        ws.send_json({"type": "input", "text": "VOICE OFF"})
+        events = collect_until(ws, "prompt")
+        assert any(e["type"] == "voiceenabled" and e["on"] is False for e in events)
+
+        ws.send_json({"type": "input", "text": ".PARAM 1595"})
+        events = collect_until(ws, "prompt")
+        assert any(
+            e["type"] == "voiceparams"
+            and (e["tone"], e["volume"], e["pitch"], e["speed"]) == (1, 5, 9, 5)
+            for e in events
+        )
+
+        ws.send_json({"type": "input", "text": "EXIT"})
+        collect_until(ws, "quit")
+
+
 def collect_until(ws, event_type, limit=500):
     events = []
     for _ in range(limit):

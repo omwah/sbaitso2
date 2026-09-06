@@ -36,6 +36,7 @@ HELP_PAGE_2 = [
     "",
     " R / REP          REPEAT MY LAST WORDS",
     " SAY <TEXT>       SPEAK WHATEVER YOU TYPE",
+    " VOICE ON|OFF     TOGGLE MY SPEAKING VOICE",
     " HELP             THIS LIST",
     " M                MORE COMMANDS",
     " EXIT / QUIT      END THE SESSION",
@@ -68,12 +69,12 @@ DOT_COMMANDS = (
 
 _PLAIN_COMMANDS = {
     "R", "REP", "HELP", "BRAIN", "DIR", "MOOD", "MSD", "DEFRAG",
-    "EXIT", "QUIT", "SBIASTO", "SIG",
+    "EXIT", "QUIT", "SBIASTO", "SIG", "VOICE",
 }
 
 _PREFIX_COMMANDS = (
     "SAY ", "TYPE ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN",
-    "DOSSHELL ", ".READ ",
+    "DOSSHELL ", ".READ ", "VOICE ",
 )
 
 
@@ -209,6 +210,20 @@ class CommandVM:
         if up.startswith("DEFRAG"):
             removed = self.engine.defrag_history()
             yield Say(f"MEMORY DEFRAGMENTED. {removed} FRAGMENTS COMPACTED. MY MIND IS TIDY AGAIN.")
+            return
+
+        if up == "VOICE" or up.startswith("VOICE "):
+            arg = s[5:].strip().lower() if up.startswith("VOICE ") else ""
+            if arg in ("on", "off"):
+                self.engine.settings.voice_on = arg == "on"
+                from .events import VoiceEnabled
+                yield VoiceEnabled(on=self.engine.settings.voice_on)
+                yield Say("I WILL SPEAK." if self.engine.settings.voice_on else "I SHALL BE SILENT.")
+            elif arg == "":
+                status = "ON" if self.engine.settings.voice_on else "OFF"
+                yield Say(f"MY VOICE IS {status}. TYPE VOICE ON OR VOICE OFF TO CHANGE IT.")
+            else:
+                yield Say("VOICE TAKES ON OR OFF. NOTHING ELSE.")
             return
 
         if up == "MSD":

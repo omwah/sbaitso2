@@ -97,6 +97,14 @@ class VoiceParams(Event):
 
 
 @dataclass
+class VoiceEnabled(Event):
+    """Voice toggled via VOICE ON/OFF."""
+
+    on: bool = True
+    delay_ms: int = 0
+
+
+@dataclass
 class EchoMode(Event):
     """.ECHO ON/OFF toggled."""
 
