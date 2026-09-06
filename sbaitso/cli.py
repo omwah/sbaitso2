@@ -124,16 +124,20 @@ class Renderer:
                 await asyncio.sleep(ev.delay_ms / 1000)
             color = ANSI["dim"] if ev.voice == "echo" else self.say_color
             speech = None
-            if self.espeak and self.voice_state.on:
+            spoken_text = ev.speech_text or ev.text
+            if self.espeak and self.voice_state.on and not ev.partial:
                 speech = await self.espeak.speak(
-                    ev.text, self.voice_state, echo=ev.voice == "echo"
+                    spoken_text, self.voice_state, echo=ev.voice == "echo"
                 )
             if ev.reveal and not self.fast:
                 for ch in ev.text:
                     sys.stdout.write(f"{color}{ch}{RESET}")
                     sys.stdout.flush()
                     await asyncio.sleep(0.012)
-                sys.stdout.write("\n")
+                if not ev.partial:
+                    sys.stdout.write("\n")
+            elif ev.partial:
+                sys.stdout.write(f"{color}{ev.text}{RESET}")
             else:
                 print(ev.text if not ev.reveal else f"{color}{ev.text}{RESET}")
             sys.stdout.flush()

@@ -77,6 +77,8 @@ class EngineArgs:
 
 
 _SENTENCE_END = re.compile(r"[.!?]+\s|\n")
+_STREAM_FLUSH_AFTER = 18
+_STREAM_HOLDBACK = 8
 
 
 class Engine:
@@ -338,45 +340,76 @@ class Engine:
 
     # ------------------------------------------------------------------
     async def _reply(self, messages: list[dict], ctx: BrainContext) -> AsyncIterator:
-        """Try the brain ladder; yield Say events (sentence-flushed)."""
+        """Try the brain ladder; stream text, but keep TTS sentence-based."""
         order = [self.brain] + [b for b in self.brains if b is not self.brain]
         for brain in order:
             if brain.down and not isinstance(brain, RetroBrain):
                 continue
-            buf = ""
+            buf = ""  # complete, unfinished sentence; retained for final TTS
+            flushed = 0  # characters already displayed from ``buf``
             got_any = False
-            if self.args.debug_llm:
-                payload = await brain.request_payload(messages)
-                if payload is not None:
-                    yield Line(
-                        f" [LLM DEBUG] {brain.name} REQUEST JSON (NO HEADERS):",
-                        color="yellow",
-                    )
-                    yield Line(
-                        json.dumps(payload, indent=2, ensure_ascii=False),
-                        color="dim",
-                    )
-                    yield Line(" [LLM DEBUG] END REQUEST", color="yellow")
             try:
+                if self.args.debug_llm:
+                    payload = await brain.request_payload(messages)
+                    if payload is not None:
+                        yield Line(
+                            f" [LLM DEBUG] {brain.name} REQUEST JSON (NO HEADERS):",
+                            color="yellow",
+                        )
+                        yield Line(
+                            json.dumps(payload, indent=2, ensure_ascii=False),
+                            color="dim",
+                        )
+                        yield Line(" [LLM DEBUG] END REQUEST", color="yellow")
+
                 async for delta in brain.stream(messages, ctx):
                     buf += delta
-                    while True:
-                        m = _SENTENCE_END.search(buf)
-                        if not m:
-                            break
-                        sent = buf[: m.end()].strip()
-                        buf = buf[m.end():]
-                        if sent:
+                    while (match := _SENTENCE_END.search(buf)) is not None:
+                        raw_sentence = buf[: match.end()]
+                        remaining = raw_sentence[flushed:].strip()
+                        full_sentence = raw_sentence.strip().upper()
+                        if full_sentence:
                             got_any = True
-                            yield Say(sent.upper())
-                rest = buf.strip()
-                if rest:
+                            if flushed:
+                                yield Say(
+                                    remaining.upper(),
+                                    speech_text=full_sentence,
+                                )
+                            else:
+                                yield Say(full_sentence)
+                        buf = buf[match.end():]
+                        flushed = 0
+
+                    # Make text visible before the model has completed a
+                    # sentence, while retaining a small tail for a smooth end.
+                    if len(buf) - flushed >= _STREAM_FLUSH_AFTER:
+                        limit = len(buf) - _STREAM_HOLDBACK
+                        cut = buf.rfind(" ", flushed + 1, limit + 1)
+                        cut = cut + 1 if cut > flushed else limit
+                        chunk = buf[flushed:cut]
+                        if chunk:
+                            got_any = True
+                            yield Say(chunk.upper(), partial=True)
+                            flushed = cut
+
+                if buf.strip():
+                    remaining = buf[flushed:].strip().upper()
+                    full_sentence = buf.strip().upper()
                     got_any = True
-                    yield Say(rest.upper())
+                    if flushed:
+                        yield Say(remaining, speech_text=full_sentence)
+                    else:
+                        yield Say(full_sentence)
+                elif flushed:
+                    # Finish the terminal line if the stream stopped after a
+                    # displayed partial chunk.
+                    yield Say("", reveal=False)
                 if got_any:
                     return
             except Exception:
                 brain.down = True
+                if flushed:
+                    yield Say("", reveal=False)
                 if isinstance(brain, RetroBrain):  # retro never fails, but be safe
                     yield Say("MY 1991 CIRCUITS STUTTERED. FORGIVE ME.")
                     return

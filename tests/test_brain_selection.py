@@ -4,7 +4,7 @@ import pytest
 
 from sbaitso.brains import RetroBrain
 from sbaitso.engine import Engine, EngineArgs, Inputs
-from sbaitso.events import Line, Quit
+from sbaitso.events import Line, Quit, Say
 
 
 @pytest.mark.asyncio
@@ -72,3 +72,26 @@ async def test_debug_llm_emits_outbound_payload_without_headers(
     assert payload["messages"][-1] == {"role": "user", "content": "I FEEL STUCK."}
     assert "authorization" not in payload_line.text.lower()
     assert "api_key" not in payload_line.text.lower()
+
+
+@pytest.mark.asyncio
+async def test_llm_deltas_render_partially_then_speak_complete_sentence():
+    engine = Engine.from_args(EngineArgs(brain="ollama", model="stream-test"))
+    engine.memory.name = "MIKE"
+
+    async def reply(messages, context):
+        yield "THIS IS A STREAMED "
+        yield "RESPONSE THAT ARRIVES "
+        yield "IN PIECES."
+
+    engine.brains[0].stream = reply
+    events = [event async for event in engine.handle("SHOW ME PROGRESS.")]
+    says = [event for event in events if isinstance(event, Say)]
+
+    assert any(event.partial for event in says)
+    assert "".join(event.text for event in says) == (
+        "THIS IS A STREAMED RESPONSE THAT ARRIVES IN PIECES."
+    )
+    final = says[-1]
+    assert final.partial is False
+    assert final.speech_text == "THIS IS A STREAMED RESPONSE THAT ARRIVES IN PIECES."
