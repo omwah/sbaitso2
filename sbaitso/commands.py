@@ -59,7 +59,7 @@ HELP_PAGE_3 = [
 
 DOT_COMMANDS = (
     ".quit", ".tone", ".volume", ".pitch", ".speed",
-    ".param", ".echo",
+    ".param", ".echo", ".sass",
 )
 
 _PLAIN_COMMANDS = {
@@ -233,6 +233,15 @@ class CommandVM:
         if cmd == ".quit":
             self.engine.quitting = True
             yield Say(f"VERY WELL, {self.engine._name()}. INITIATING SIGN-OFF.")
+            return
+
+        if cmd == ".sass":
+            level = args[0].upper() if len(args) == 1 else ""
+            if level not in ("LOW", "NORMAL", "HIGH"):
+                yield Say("SASS MUST BE LOW, NORMAL, OR HIGH.")
+                return
+            settings.sass = level
+            yield Say(f"SASS LEVEL SET TO {level}.")
             return
 
         if cmd == ".echo":
