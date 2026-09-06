@@ -164,6 +164,17 @@ class Engine:
         for brain in self.brains:
             brain.down = False
 
+    def switch_to_retro(self) -> RetroBrain:
+        """Select Retro mode, adding its local brain to an explicit session if needed."""
+        for brain in self.brains:
+            if isinstance(brain, RetroBrain):
+                self.brain = brain
+                return brain
+        retro = RetroBrain(self._shared_retro())
+        self.brains.append(retro)
+        self.brain = retro
+        return retro
+
     def defrag_history(self) -> int:
         if len(self.history) <= 12:
             return 0

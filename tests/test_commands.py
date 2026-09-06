@@ -99,6 +99,18 @@ async def test_brain_command(engine):
     assert "RETRO" in text
 
 
+async def test_brain_retro_switch_adds_retro_to_an_explicit_brain_session():
+    from sbaitso.brains import RetroBrain
+    from sbaitso.engine import Engine, EngineArgs
+
+    ollama_only = Engine.from_args(EngineArgs(brain="ollama"))
+    ev = await events_of(ollama_only, "BRAIN RETRO")
+
+    assert isinstance(ollama_only.brain, RetroBrain)
+    assert any(isinstance(brain, RetroBrain) for brain in ollama_only.brains)
+    assert "RETRO MODE ENGAGED" in " ".join(says_of(ev))
+
+
 async def test_dir_command(engine):
     engine.memory.note_user("i am stressed about work")
     ev = await events_of(engine, "DIR")
