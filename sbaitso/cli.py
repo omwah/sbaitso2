@@ -134,12 +134,12 @@ class Renderer:
                     sys.stdout.write(f"{color}{ch}{RESET}")
                     sys.stdout.flush()
                     await asyncio.sleep(0.012)
-                if not ev.partial:
+                if ev.line_end:
                     sys.stdout.write("\n")
-            elif ev.partial:
-                sys.stdout.write(f"{color}{ev.text}{RESET}")
-            else:
+            elif ev.line_end:
                 print(ev.text if not ev.reveal else f"{color}{ev.text}{RESET}")
+            else:
+                sys.stdout.write(f"{color}{ev.text}{RESET}")
             sys.stdout.flush()
             if speech:
                 await speech

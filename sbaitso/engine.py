@@ -345,6 +345,7 @@ class Engine:
         for brain in order:
             if brain.down and not isinstance(brain, RetroBrain):
                 continue
+            streaming = isinstance(brain, (OllamaBrain, RemoteBrain))
             buf = ""  # complete, unfinished sentence; retained for final TTS
             flushed = 0  # characters already displayed from ``buf``
             got_any = False
@@ -373,10 +374,11 @@ class Engine:
                             if flushed:
                                 yield Say(
                                     remaining.upper(),
+                                    line_end=not streaming,
                                     speech_text=full_sentence,
                                 )
                             else:
-                                yield Say(full_sentence)
+                                yield Say(full_sentence, line_end=not streaming)
                         buf = buf[match.end():]
                         flushed = 0
 
@@ -389,7 +391,7 @@ class Engine:
                         chunk = buf[flushed:cut]
                         if chunk:
                             got_any = True
-                            yield Say(chunk.upper(), partial=True)
+                            yield Say(chunk.upper(), partial=True, line_end=False)
                             flushed = cut
 
                 if buf.strip():
@@ -397,18 +399,26 @@ class Engine:
                     full_sentence = buf.strip().upper()
                     got_any = True
                     if flushed:
-                        yield Say(remaining, speech_text=full_sentence)
+                        yield Say(
+                            remaining,
+                            line_end=not streaming,
+                            speech_text=full_sentence,
+                        )
                     else:
-                        yield Say(full_sentence)
+                        yield Say(full_sentence, line_end=not streaming)
+                if streaming and got_any:
+                    # Every streamed chunk shares a line; close it once the
+                    # response has finished.
+                    yield Say("", reveal=False)
                 elif flushed:
-                    # Finish the terminal line if the stream stopped after a
-                    # displayed partial chunk.
                     yield Say("", reveal=False)
                 if got_any:
                     return
             except Exception:
                 brain.down = True
-                if flushed:
+                if streaming and got_any:
+                    yield Say("", reveal=False)
+                elif flushed:
                     yield Say("", reveal=False)
                 if isinstance(brain, RetroBrain):  # retro never fails, but be safe
                     yield Say("MY 1991 CIRCUITS STUTTERED. FORGIVE ME.")
