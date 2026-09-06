@@ -11,6 +11,24 @@
   <div id="crt">
     <div id="screen">
       <div id="terminal"></div>
+      <button id="controls-toggle" type="button" aria-controls="control-drawer" aria-expanded="false">CTRL</button>
+      <aside id="control-drawer" hidden aria-hidden="true" aria-label="Terminal controls">
+        <div class="control-title">SYSTEM CONTROLS</div>
+        <div class="sound-control">
+          <span>SOUND</span>
+          <button id="voice-toggle" class="sound-toggle" type="button" role="switch" aria-checked="true" aria-label="Disable speech synthesis"><span class="toggle-knob"></span></button>
+        </div>
+        <div class="voice-controls">
+          <label for="tone-control">TONE <output id="tone-value">TREBLE</output></label>
+          <input id="tone-control" type="range" min="0" max="1" step="1" value="1" aria-label="Voice tone">
+          <label for="volume-control">VOLUME <output id="volume-value">5</output></label>
+          <input id="volume-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice volume">
+          <label for="pitch-control">PITCH <output id="pitch-value">5</output></label>
+          <input id="pitch-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice pitch">
+          <label for="speed-control">SPEED <output id="speed-value">5</output></label>
+          <input id="speed-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice speed">
+        </div>
+      </aside>
       <div id="scanlines"></div>
       <div id="vignette"></div>
     </div>
