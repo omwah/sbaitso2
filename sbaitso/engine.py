@@ -22,7 +22,7 @@ from .llm import OllamaClient, RemoteClient
 from .memory import Fact, SessionMemory
 from .persona import assemble_messages
 from .retro import RetroEngine
-from .safety import crisis_response, is_crisis, is_swear, swear_response
+from .safety import crisis_response, is_crisis, is_swear, sass_response
 
 
 class Inputs:
@@ -411,7 +411,7 @@ class Engine:
                     yield ev
                 self.swears = 0
             else:
-                yield Say(swear_response(self._name(), self.rng))
+                yield Say(sass_response(self._name(), self.settings.sass))
             return
 
         # commands first — they work in every brain mode

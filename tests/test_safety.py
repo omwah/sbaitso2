@@ -1,6 +1,6 @@
 import random
 
-from sbaitso.safety import SWEAR_RESPONSES, crisis_response, is_crisis, is_swear, swear_response
+from sbaitso.safety import SWEAR_RESPONSES, crisis_response, is_crisis, is_swear, sass_response, swear_response
 
 from conftest import events_of, says_of
 
@@ -42,10 +42,9 @@ async def test_engine_crisis_path(engine):
 
 
 async def test_swear_warnings_precede_a_third_strike_parity_crash(engine):
-    expected = {line.replace("{N}", "MIKE") for line in SWEAR_RESPONSES}
     for _ in range(2):
         ev = await events_of(engine, "fuck you")
-        assert " ".join(says_of(ev)) in expected
+        assert " ".join(says_of(ev)) == sass_response("MIKE")
 
     ev = await events_of(engine, "fuck you")
     assert "PARITY ERROR" in " ".join(says_of(ev))
