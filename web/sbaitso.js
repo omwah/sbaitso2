@@ -93,10 +93,22 @@ controlsToggle.addEventListener("click", () => {
   setControlsOpen(controlDrawer.hidden);
 });
 
+let controlKeyUsed = false;
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Control") {
+    controlKeyUsed = false;
+    return;
+  }
+  if (event.ctrlKey) controlKeyUsed = true;
   if (event.key === "Escape" && controlDrawer.classList.contains("open")) {
     event.preventDefault();
     setControlsOpen(false);
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  if (event.key === "Control" && !controlKeyUsed) {
+    setControlsOpen(controlDrawer.hidden);
   }
 });
 
