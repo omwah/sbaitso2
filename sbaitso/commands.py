@@ -1,7 +1,7 @@
 """The DOS command VM — runs before the brain is consulted.
 
 Layer 1: authentic commands from the 1991 manual (dot commands, R, HELP+M).
-Layer 2: v2 commands (BRAIN, DIR, MOOD, MSD, ...). Works in every frontend
+Layer 2: v2 commands (BRAIN, MSD, ...). Works in every frontend
 and every brain mode, including retro.
 """
 
@@ -49,9 +49,6 @@ HELP_PAGE_3 = [
     " BRAIN SCAN       RE-PROBE FOR A BETTER BRAIN",
     " BRAIN RETRO      SWITCH TO 1991 RETRO MODE",
     " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR (CONFIGURED MAX)",
-    " DIR              LIST WHAT I KNOW (RAM ONLY)",
-    " TYPE <FILE>      PRINT MEMORY.DAT OR JOURNAL FILES",
-    " MOOD             MOOD LOG AND TREND FOR THIS SESSION",
     " COLOR <NAME>     CGA1 CGA2 EGA VGA AMBER",
     " TOPIC <SUBJECT>  FOCUS OUR CONVERSATION",
     " DEFRAG           COMPACT MY MEMORY",
@@ -66,12 +63,12 @@ DOT_COMMANDS = (
 )
 
 _PLAIN_COMMANDS = {
-    "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "DIR", "MOOD", "MSD", "DEFRAG",
+    "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "MSD", "DEFRAG",
     "EXIT", "QUIT", "SBIASTO", "SIG", "VOICE",
 }
 
 _PREFIX_COMMANDS = (
-    "SAY ", "TYPE ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
+    "SAY ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
     "VOICE ",
 )
 
@@ -168,24 +165,6 @@ class CommandVM:
             yield Say(f"ACTIVE BRAIN: {brain.name}.")
             yield Say(f"LADDER: {ladder}.")
             yield Say("TYPE BRAIN SCAN TO RE-PROBE, OR BRAIN RETRO FOR 1991 MODE.")
-            return
-
-        if up == "DIR":
-            yield Beep(freq=660.0, ms=60)
-            for text in self.engine.memory.snapshot_lines():
-                yield Line(text)
-            yield Line("", delay_ms=50)
-            yield Say("NOTHING HERE SURVIVES THE SESSION. AS PROMISED.")
-            return
-
-        if up.startswith("TYPE "):
-            async for ev in self._type_file(s[5:].strip()):
-                yield ev
-            return
-
-        if up == "MOOD":
-            for text in self.engine.memory.mood_chart():
-                yield Line(text, color="green" if self.engine.memory.mood_trend() == "LIFTING" else "white")
             return
 
         if up.startswith("COLOR "):
@@ -297,32 +276,6 @@ class CommandVM:
 
         yield Say("I DO NOT KNOW THAT DOT COMMAND. TRY HELP.")
 
-    async def _type_file(self, name: str) -> AsyncIterator:
-        up = name.upper()
-        mem = self.engine.memory
-        if up in ("MEMORY.DAT", "MEMORY"):
-            if not mem.facts:
-                yield Line(" MEMORY.DAT IS EMPTY. YOU HAVE NOT TOLD ME ANYTHING YET.", color="yellow")
-                return
-            for fact in mem.facts:
-                yield Line(f" {fact.key:<12} {fact.value}   [T{fact.turn}, RAM ONLY]")
-            return
-        if up.startswith("JOURNAL"):
-            if not mem.journal:
-                yield Line(" THE JOURNAL IS EMPTY. TALK TO ME FIRST.", color="yellow")
-                return
-            for entry in mem.journal:
-                yield Line(f" JOURNAL.{entry.idx:03d}  (T{entry.turn})  {entry.title}")
-                if up in ("ALL", "JOURNAL", "JOURNAL\\") or up.startswith("JOURNAL\\0"):
-                    for text in entry.text.split("\n"):
-                        yield Line("   " + text)
-            return
-        if up in ("MOOD.LOG", "MOOD.DAT"):
-            for text in mem.mood_chart():
-                yield Line(text)
-            return
-        yield Say("TYPE WORKS ON: MEMORY.DAT, MOOD.LOG, JOURNAL.")
-
     async def _patient_llm(self, argument: str) -> AsyncIterator:
         if not argument:
             turns = 16
@@ -364,16 +317,22 @@ class CommandVM:
 
     def _msd(self) -> list[str]:
         mem = self.engine.memory
-        facts = len(mem.facts)
-        return [
+        lines = [
             " MENTAL STATUS DISPLAY",
             " ----------------------------------------",
             f" SESSION TURNS ......... {mem.turns}",
             f" YOUR WORDS ............ {mem.user_words}",
             f" MY WORDS .............. {mem.sbaitso_words}",
             f" MOOD TREND ............ {mem.mood_trend()}",
-            f" FACTS RETAINED ........ {facts}  [RAM ONLY]",
-            f" JOURNAL ENTRIES ........ {len(mem.journal)}  [RAM ONLY]",
-            f" ACTIVE BRAIN .......... {self.engine.brain.name}",
-            " MEMORY ................ 640K OK, NOTHING ON DISK",
+            f" FACTS RETAINED ........ {len(mem.facts)}",
+            " SESSION FACTS .........",
         ]
+        if mem.facts:
+            lines.extend(
+                f"   {fact.key:<10} {fact.value}"
+                for fact in mem.facts
+            )
+        else:
+            lines.append("   NONE. YOU HAVE NOT TOLD ME ANYTHING YET.")
+        lines.append(f" ACTIVE BRAIN .......... {self.engine.brain.name}")
+        return lines

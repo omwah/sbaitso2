@@ -24,18 +24,22 @@ def test_mood_extraction():
     assert mem.moods[-1].score == 1
 
 
+def test_explicit_mood_phrases_are_detected():
+    for text in (
+        "i am feeling anxious",
+        "my mood is calm",
+        "i feel worried today",
+    ):
+        mem = SessionMemory()
+        mem.note_user(text)
+        assert mem.moods
+
+
 def test_topic_extraction():
     mem = SessionMemory()
     mem.note_user("my boss is driving me crazy at work")
     assert "boss" in mem.topics
     assert "work" in mem.topics
-
-
-def test_journal_heuristic_via_engine(engine):
-    engine.memory.note_user("i am so stressed about my job")
-    engine._record("i am so stressed about my job", "I SEE.")
-    assert len(engine.memory.journal) == 1
-    assert "STRESSED" in engine.memory.journal[0].title
 
 
 def test_mood_trend():

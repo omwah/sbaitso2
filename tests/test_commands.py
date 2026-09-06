@@ -162,15 +162,19 @@ async def test_patient_llm_runs_an_autonomous_retro_doctor_session():
     assert isinstance(autonomous.brain, RetroBrain)
 
 
-async def test_dir_command(engine):
-    engine.memory.note_user("i am stressed about work")
-    ev = await events_of(engine, "DIR")
+async def test_msd_includes_session_facts(engine):
+    engine.memory.note_user("i work as a baker")
+    ev = await events_of(engine, "MSD")
     lines = [e.text for e in ev if isinstance(e, Line)]
-    assert any("RAM ONLY" in t for t in lines)
+    assert any("SESSION FACTS" in line for line in lines)
+    assert any("JOB" in line and "BAKER" in line for line in lines)
+    assert all("[T" not in line for line in lines)
 
 
-async def test_mood_command(engine):
-    engine.memory.note_user("i feel great")
-    ev = await events_of(engine, "MOOD")
-    lines = [e.text for e in ev if isinstance(e, Line)]
-    assert any("GREAT" in t for t in lines)
+def test_removed_virtual_log_commands_are_not_recognized(engine):
+    assert not engine.commands.recognizes("MEMORY")
+    assert not engine.commands.recognizes("DIR")
+    assert not engine.commands.recognizes("MOOD")
+    assert not engine.commands.recognizes("TYPE JOURNAL")
+    assert not engine.commands.recognizes("TYPE MOOD.LOG")
+    assert not engine.commands.recognizes("TYPE MEMORY.DAT")
