@@ -12,6 +12,7 @@ exactly as the original promised.
 
 ```sh
 pixi run sbaitso            # native terminal frontend
+pixi run sbaitso tui        # fullscreen Textual frontend
 pixi run serve              # web frontend at http://127.0.0.1:8000
 pixi run test               # run the test suite
 ```
@@ -22,7 +23,8 @@ through: `pixi run serve --port 8321`.
 ## The brain ladder
 
 1. **Ollama** (default, local): probed at boot via `/api/tags`.
-2. **Remote API** (optional): set `SBAITSO_REMOTE_KEY` (OpenAI-compatible).
+2. **Remote API** (optional): use explicit `SBAITSO_REMOTE_KEY` / `--remote-key`
+   settings, or automatically detect a supported OpenAI-compatible provider key.
 3. **RETRO v1** (always): a faithful 1991 pattern-matching engine. If no
    LLM is reachable, Dr. Sbaitso degrades — never dies:
 
@@ -33,9 +35,18 @@ through: `pixi run serve --port 8321`.
    ```
 
 Useful flags: `--brain auto|retro|ollama|remote`, `--model NAME`,
-`--sass LOW|NORMAL|HIGH`, `--color CGA1|CGA2|EGA|VGA|AMBER`.
+`--persona PERSONA`, `--sass LOW|NORMAL|HIGH`, `--color CGA1|CGA2|EGA|VGA|AMBER`.
+`--persona` is case-insensitive and extensionless; its help text lists the
+personas bundled with the installed package.
 Only `--brain auto` uses the fallback ladder; an explicitly requested
 `ollama` or `remote` brain exits with an error if it cannot be reached.
+
+Remote setting precedence is CLI flags, then `SBAITSO_REMOTE_KEY`,
+`SBAITSO_REMOTE_URL`, and `SBAITSO_REMOTE_MODEL`, then the first detected
+provider key. Supported autodetected OpenAI-compatible provider variables are
+`OPENAI_API_KEY`, `GROQ_API_KEY`, `TOGETHER_API_KEY`, `OPENROUTER_API_KEY`,
+`MISTRAL_API_KEY`, and `CEREBRAS_API_KEY`. Ollama remains the preferred
+healthy brain in automatic mode.
 In the native frontend, `--debug-llm` prints the outbound JSON request,
 escaped inbound response chunks, time to first chunk, and total stream time
 for Ollama or remote calls (messages and model only; never authorization
@@ -49,11 +60,23 @@ Authentic (from the 1991 manual): `.QUIT`, `.TONE 0|1`,
 
 Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [N]`, `VOICE ON|OFF`,
 `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
-`LOAD <PERSONA>.SYS`, `EXIT`.
+`LOAD [PERSONA].SYS`, `.SASS LOW|NORMAL|HIGH`, `.KEYCLICK ON|OFF`, `EXIT`.
 
-The bundled `SBAITSO.SYS` persona loads by default. `LOAD GENTLE.SYS` or
-`LOAD SARDONIC.SYS` replaces the complete active persona for this RAM-only
-session; only bundled allowlisted persona files can be loaded.
+## Personas
+
+The bundled `sbaitso.sys` persona loads by default. `LOAD` with no argument
+lists all bundled personas; `LOAD GENTLE.SYS` replaces the complete active
+persona for the RAM-only session. Persona resources are discovered dynamically
+from `sbaitso/personas/*.sys`, not from an application hardcoded list. Only
+those bundled package resources can be loaded—`LOAD` never reads an arbitrary
+user path.
+
+A persona may start with `NAME: <name>` followed by a blank line. That name is
+used by the boot greeting (`HELLO, MY NAME IS ...`). If the header is absent,
+the uppercase filename stem is used instead. The currently bundled personas
+are `SBAITSO.SYS` (DOCTOR SBAITSO), `GENTLE.SYS` (LUCY), and `SARDONIC.SYS`
+(MAX). Resource filenames are lowercase; the DOS interfaces display them in
+uppercase.
 
 Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to 8 turns;
 an explicit count may be from 1 to 256 turns.
@@ -81,11 +104,13 @@ pixi run test              # run tests (offline; Ollama probing is redirected)
 
 ## Status
 
-Phase 0–2 complete (see `PLAN.md`): core engine, both frontends, brain
-ladder with failover, command VM, session memory, safety layer,
-PARITY ERROR theater, and synchronized web/native voice backends.
+Phases 0–4 are complete (see `PLAN.md`): core engine, both frontends, brain
+ladder with failover, command VM, RAM-only session memory and summaries,
+safety layer, PARITY ERROR theater, configurable palette/keyclick/voice
+controls, and synchronized web/native presentation.
 
-Phase 3 polish and Phase 4 extras remain.
+Phase 5 is complete: bundled persona loading, the fullscreen `sbaitso tui`
+Textual frontend, and OpenAI-compatible remote-provider autodetection.
 
 ## License & credits
 

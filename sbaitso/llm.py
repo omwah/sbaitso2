@@ -8,10 +8,34 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
 
 import httpx
 
 DEFAULT_OLLAMA_URL = os.environ.get("SBAITSO_OLLAMA_URL", "http://127.0.0.1:11434")
+
+
+@dataclass(frozen=True)
+class RemoteProvider:
+    key_env: str
+    base_url: str
+    model: str
+
+
+# OpenAI-compatible providers only. Explicit CLI/SBAITSO_REMOTE_* settings win.
+REMOTE_PROVIDERS = (
+    RemoteProvider("OPENAI_API_KEY", "https://api.openai.com/v1", "gpt-4o-mini"),
+    RemoteProvider("GROQ_API_KEY", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+    RemoteProvider("TOGETHER_API_KEY", "https://api.together.xyz/v1", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
+    RemoteProvider("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "openai/gpt-4o-mini"),
+    RemoteProvider("MISTRAL_API_KEY", "https://api.mistral.ai/v1", "mistral-small-latest"),
+    RemoteProvider("CEREBRAS_API_KEY", "https://api.cerebras.ai/v1", "llama3.1-8b"),
+)
+
+
+def detected_remote_provider() -> RemoteProvider | None:
+    """Return the first configured supported OpenAI-compatible provider."""
+    return next((provider for provider in REMOTE_PROVIDERS if os.environ.get(provider.key_env)), None)
 
 
 class OllamaClient:
@@ -85,11 +109,20 @@ class RemoteClient:
         base_url: str | None = None,
         model: str | None = None,
     ) -> None:
-        self.api_key = api_key or os.environ.get("SBAITSO_REMOTE_KEY", "")
+        provider = detected_remote_provider()
+        self.provider = "custom" if api_key or os.environ.get("SBAITSO_REMOTE_KEY") else (
+            provider.key_env if provider else None
+        )
+        self.api_key = api_key or os.environ.get("SBAITSO_REMOTE_KEY", "") or (
+            os.environ.get(provider.key_env, "") if provider else ""
+        )
         self.base_url = (
-            base_url or os.environ.get("SBAITSO_REMOTE_URL", "https://api.openai.com/v1")
+            base_url or os.environ.get("SBAITSO_REMOTE_URL") or
+            (provider.base_url if provider else "https://api.openai.com/v1")
         ).rstrip("/")
-        self.model = model or os.environ.get("SBAITSO_REMOTE_MODEL", "gpt-4o-mini")
+        self.model = model or os.environ.get("SBAITSO_REMOTE_MODEL") or (
+            provider.model if provider else "gpt-4o-mini"
+        )
 
     @property
     def configured(self) -> bool:
