@@ -26,6 +26,7 @@ const COLORS = {
 const RESET = "\x1b[0m";
 const SAY_WRAP_WIDTH = 72;
 let sayColumn = 0;
+let sayWord = "";
 
 const term = new window.Terminal({
   cursorBlink: true,
@@ -148,6 +149,7 @@ async function handle(ev) {
       if (ev.delay_ms) await sleep(ev.delay_ms);
       term.write((COLORS[ev.color] || "") + ev.text + RESET + "\r\n");
       sayColumn = 0;
+      sayWord = "";
       break;
     case "say": {
       if (ev.delay_ms) await sleep(ev.delay_ms);
@@ -176,11 +178,13 @@ async function handle(ev) {
     case "clear":
       term.clear();
       sayColumn = 0;
+      sayWord = "";
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
       term.write("\r\n" + COLORS.dim + label + "> " + RESET);
       sayColumn = 0;
+      sayWord = "";
       inputEnabled = true;
       break;
     }
@@ -214,19 +218,41 @@ async function handle(ev) {
   }
 }
 
-function writeWrapped(ch) {
-  if (ch === "\n") {
-    term.write("\r\n");
-    sayColumn = 0;
-    return;
-  }
-  if (sayColumn >= SAY_WRAP_WIDTH) {
-    term.write("\r\n");
-    sayColumn = 0;
-    if (ch === " ") return;
-  }
+async function writeSayChar(ch, reveal, perChar) {
   term.write(ch);
   sayColumn += 1;
+  if (reveal) await sleep(perChar);
+}
+
+async function flushSayWord(reveal, perChar) {
+  if (!sayWord) return;
+  if (sayColumn && sayColumn + sayWord.length > SAY_WRAP_WIDTH) {
+    term.write("\r\n");
+    sayColumn = 0;
+  }
+  for (const ch of sayWord) {
+    if (sayColumn >= SAY_WRAP_WIDTH) {
+      term.write("\r\n");
+      sayColumn = 0;
+    }
+    await writeSayChar(ch, reveal, perChar);
+  }
+  sayWord = "";
+}
+
+async function writeWrappedText(text, reveal, perChar) {
+  for (const ch of text) {
+    if (ch === "\n") {
+      await flushSayWord(reveal, perChar);
+      term.write("\r\n");
+      sayColumn = 0;
+    } else if (/\s/.test(ch)) {
+      await flushSayWord(reveal, perChar);
+      if (sayColumn < SAY_WRAP_WIDTH) await writeSayChar(ch, reveal, perChar);
+    } else {
+      sayWord += ch;
+    }
+  }
 }
 
 async function typeOut(
@@ -235,19 +261,13 @@ async function typeOut(
   const color = echoVoice ? COLORS.dim : sayColor;
   term.write(color);
   let perChar = 14;
-  if (reveal) {
-    // Complete sentences pace to speech. Streamed partial text remains brisk
-    // so the user sees model progress instead of waiting for a period.
-    if (!partial && spokenSec > 0 && text.length > 0) {
-      perChar = Math.min(45, Math.max(6, (spokenSec * 1000) / text.length));
-    }
-    for (const ch of text) {
-      writeWrapped(ch);
-      await sleep(perChar);
-    }
-  } else {
-    for (const ch of text) writeWrapped(ch);
+  // Complete sentences pace to speech. Streamed partial text remains brisk
+  // so the user sees model progress instead of waiting for a period.
+  if (reveal && !partial && spokenSec > 0 && text.length > 0) {
+    perChar = Math.min(45, Math.max(6, (spokenSec * 1000) / text.length));
   }
+  await writeWrappedText(text, reveal, perChar);
+  if (lineEnd) await flushSayWord(reveal, perChar);
   term.write(RESET);
   if (lineEnd) {
     term.write("\r\n");

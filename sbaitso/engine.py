@@ -82,6 +82,11 @@ _STREAM_FLUSH_AFTER = 18
 _STREAM_HOLDBACK = 8
 
 
+def format_elapsed(milliseconds: float) -> str:
+    """Use milliseconds for short waits and seconds for longer ones."""
+    return f"{milliseconds / 1000:.2f} s" if milliseconds >= 1000 else f"{milliseconds:.1f} ms"
+
+
 class Engine:
     def __init__(self, brains: list[Brain], args: EngineArgs) -> None:
         self.brains = brains
@@ -436,12 +441,12 @@ class Engine:
                 if self.args.debug_llm and streaming:
                     completed_ms = (time.perf_counter() - request_started) * 1000
                     first_chunk = (
-                        f"{(first_chunk_at - request_started) * 1000:.1f} ms"
+                        format_elapsed((first_chunk_at - request_started) * 1000)
                         if first_chunk_at is not None else "NO CHUNK"
                     )
                     yield Line(
                         f" [LLM DEBUG] {brain.name} TIMING: FIRST CHUNK "
-                        f"{first_chunk}; RESPONSE COMPLETE {completed_ms:.1f} ms",
+                        f"{first_chunk}; RESPONSE COMPLETE {format_elapsed(completed_ms)}",
                         color="yellow",
                     )
                 if got_any:

@@ -35,13 +35,22 @@ def retro_warning() -> list:
 
 
 def greeting_events() -> list:
+    """The opening monologue, formatted like one streamed response."""
+    lines = [
+        ("HELLO, MY NAME IS DOCTOR SBAITSO.", 120),
+        ("I AM HERE TO HELP YOU.", 0),
+        ("SAY WHATEVER IS IN YOUR MIND FREELY,", 0),
+        ("OUR CONVERSATION WILL BE KEPT IN STRICT CONFIDENCE.", 0),
+        ("MEMORY CONTENTS WILL BE WIPED OFF AFTER YOU LEAVE.", 150),
+        ("MAKE THIS SESSION COUNT. WHAT IS YOUR NAME?", 0),
+    ]
     return [
-        Say("HELLO, MY NAME IS DOCTOR SBAITSO.", delay_ms=120),
-        Say("I AM HERE TO HELP YOU."),
-        Say("SAY WHATEVER IS IN YOUR MIND FREELY,"),
-        Say("OUR CONVERSATION WILL BE KEPT IN STRICT CONFIDENCE."),
-        Say("MEMORY CONTENTS WILL BE WIPED OFF AFTER YOU LEAVE.", delay_ms=150),
-        Say("MAKE THIS SESSION COUNT. WHAT IS YOUR NAME?"),
+        Say(
+            text if index == len(lines) - 1 else f"{text} ",
+            delay_ms=delay,
+            line_end=index == len(lines) - 1,
+        )
+        for index, (text, delay) in enumerate(lines)
     ]
 
 

@@ -56,7 +56,7 @@ Try `SAY PARITY` for an authentic crash.
 ## Voice
 
 - **Web:** uses the bundled `sam-js` S.A.M. synthesizer. LLM text streams to
-  the display in partial chunks, wrapping at a stable 72 columns; once a
+  the display in partial chunks, word-wrapping at a stable 72 columns; once a
   sentence closes, it is synthesized as one utterance. Complete non-streamed
   lines reveal at the generated audio pace. Browser audio unlocks after a
   click or keypress; entering your name does it.
