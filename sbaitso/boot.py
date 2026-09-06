@@ -29,6 +29,7 @@ def retro_warning() -> list:
     return [
         Line(" WARNING: NEURAL LINK NOT FOUND.", color="red", delay_ms=120),
         Line(" SWITCHING TO 1991 COMPATIBILITY MODE.", color="red", delay_ms=200),
+        Line(""),
         Say("I AM ONLY AS SMART AS I WAS THEN. BE PATIENT WITH ME.", reveal=True),
     ]
 

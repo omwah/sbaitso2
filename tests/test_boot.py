@@ -1,8 +1,14 @@
 import pytest
 
-from sbaitso.boot import greeting_events
+from sbaitso.boot import greeting_events, retro_warning
 from sbaitso.engine import Engine, EngineArgs, Inputs
-from sbaitso.events import Say
+from sbaitso.events import Line, Say
+
+
+def test_retro_warning_has_a_blank_line_before_the_doctor_speaks():
+    events = retro_warning()
+    assert isinstance(events[2], Line) and events[2].text == ""
+    assert isinstance(events[3], Say)
 
 
 def test_greeting_formats_as_one_wrapped_response():
