@@ -72,6 +72,11 @@ async def test_debug_llm_emits_outbound_payload_without_headers(
     assert payload["messages"][-1] == {"role": "user", "content": "I FEEL STUCK."}
     assert "authorization" not in payload_line.text.lower()
     assert "api_key" not in payload_line.text.lower()
+    chunk_line = next(
+        event for event in events
+        if isinstance(event, Line) and "RESPONSE CHUNK:" in event.text
+    )
+    assert chunk_line.text.endswith('"DEBUG RESPONSE."')
 
 
 @pytest.mark.asyncio
