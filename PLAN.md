@@ -403,7 +403,8 @@ sbaitso2/
 - [x] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
 
 ### Phase 5 — optional extras
-- [ ] Model switcher (`LOAD BIGBRAIN.SYS`), textual-based fancy TUI
+- [x] Bundled complete persona loader (`LOAD <PERSONA>.SYS`)
+- [ ] Textual-based fancy TUI
 - [ ] Remote-API rung polish (provider autodetect from env keys)
 
 ## 7. Risks / open questions

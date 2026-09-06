@@ -104,6 +104,11 @@ async def test_voice_command(engine):
     assert "ON OR OFF" in " ".join(says_of(ev))
 
 
+async def test_load_without_argument_lists_allowlisted_personas(engine):
+    ev = await events_of(engine, "LOAD")
+    assert "SBAITSO.SYS GENTLE.SYS SARDONIC.SYS" in " ".join(says_of(ev))
+
+
 async def test_runtime_sass_command_updates_the_safety_level(engine):
     ev = await events_of(engine, ".SASS HIGH")
     assert engine.settings.sass == "HIGH"

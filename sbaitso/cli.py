@@ -294,6 +294,7 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         remote_url=args.remote_url,
         remote_model=args.remote_model,
         remote_key=args.remote_key,
+        persona=args.persona,
         sass=args.sass,
         palette=args.color,
         fast=args.fast,
@@ -362,6 +363,11 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--remote-url", default=None)
         sp.add_argument("--remote-model", default=None)
         sp.add_argument("--remote-key", default=None)
+        sp.add_argument(
+            "--persona", type=str.lower, choices=["sbaitso", "gentle", "sardonic"],
+            default="sbaitso", metavar="PERSONA",
+            help="bundled persona: sbaitso, gentle, sardonic (default: sbaitso)",
+        )
         sp.add_argument("--sass", choices=["LOW", "NORMAL", "HIGH"], default="NORMAL")
         sp.add_argument("--color", choices=list(PALETTE_FG), default="vga")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")

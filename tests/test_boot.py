@@ -11,6 +11,7 @@ def test_boot_banner_uses_towhee_branding_and_package_version():
     assert lines[0].wrap is True
     assert all("COPYRIGHT" not in line.text.upper() for line in lines)
     assert not any("......." in line.text for line in lines)
+    assert any("LOADING SBAITSO.SYS" in line.text.upper() for line in lines)
 
 
 def test_retro_warning_has_a_blank_line_before_the_doctor_speaks():

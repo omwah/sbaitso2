@@ -12,6 +12,11 @@ def test_color_option_configures_the_engine_palette():
     assert engine_args_from_namespace(args).palette == "amber"
 
 
+def test_persona_option_is_case_insensitive_and_extensionless():
+    args = build_parser().parse_args(["run", "--persona", "GENTLE"])
+    assert engine_args_from_namespace(args).persona == "gentle"
+
+
 def test_default_color_is_vga():
     args = build_parser().parse_args(["run"])
     assert engine_args_from_namespace(args).palette == "vga"

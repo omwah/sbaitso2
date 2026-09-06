@@ -6,6 +6,8 @@ from .memory import SessionMemory
 
 MAX_HISTORY = 40
 
+# Defensive fallback for direct helper calls. Engine sessions always load the
+# bundled SBAITSO.SYS persona (or a selected replacement) instead.
 _BASE_PROMPT = """You are DOCTOR SBAITSO, a DOS-era AI psychologist from 1991, \
 now running version 2.0 on modern hardware.
 
@@ -45,9 +47,9 @@ _SASS = {
 
 def build_system_prompt(
     memory: SessionMemory, sass: str = "NORMAL", topic: str | None = None,
-    rolling_summary: str = "",
+    rolling_summary: str = "", base_prompt: str = _BASE_PROMPT,
 ) -> str:
-    parts = [_BASE_PROMPT]
+    parts = [base_prompt]
     parts.append(_SASS.get(sass.upper(), _SASS["NORMAL"]) + "\n")
 
     known: list[str] = []
@@ -80,10 +82,10 @@ def assemble_messages(
     history: list[dict],
     user_line: str,
     topic: str | None = None,
-    rolling_summary: str = "",
+    rolling_summary: str = "", base_prompt: str = _BASE_PROMPT,
 ) -> list[dict]:
     messages: list[dict] = [
-        {"role": "system", "content": build_system_prompt(memory, sass, topic, rolling_summary)}
+        {"role": "system", "content": build_system_prompt(memory, sass, topic, rolling_summary, base_prompt)}
     ]
     trimmed = history[-MAX_HISTORY:]
     messages.extend(trimmed)

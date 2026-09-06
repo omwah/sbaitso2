@@ -49,7 +49,11 @@ Authentic (from the 1991 manual): `.QUIT`, `.TONE 0|1`,
 
 Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [N]`, `VOICE ON|OFF`,
 `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
-`EXIT`.
+`LOAD <PERSONA>.SYS`, `EXIT`.
+
+The bundled `SBAITSO.SYS` persona loads by default. `LOAD GENTLE.SYS` or
+`LOAD SARDONIC.SYS` replaces the complete active persona for this RAM-only
+session; only bundled allowlisted persona files can be loaded.
 
 Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to 8 turns;
 an explicit count may be from 1 to 256 turns.
