@@ -225,6 +225,7 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         allow_shell=args.doshell,
         fast=args.fast,
         debug_llm=getattr(args, "debug_llm", False),
+        patient_llm_max_turns=args.patient_llm_max_turns,
     )
 
 
@@ -293,6 +294,10 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--doshell", action="store_true", help="enable DOSSHELL command")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
+        sp.add_argument(
+            "--patient-llm-max-turns", type=int, default=3256,
+            help="maximum turns accepted by PATIENT LLM (default: 3256)",
+        )
 
     serve = sub.add_parser("serve", help="run the web frontend")
     common(serve)

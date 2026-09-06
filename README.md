@@ -47,11 +47,13 @@ Authentic (from the 1991 manual): `.QUIT`, `.READ <file>`, `.TONE 0|1`,
 `.VOLUME 0-9`, `.PITCH 0-9`, `.SPEED 0-9`, `.PARAM tvps`, `.ECHO ON/OFF`,
 `R` (repeat), `SAY <text>`, `HELP` (then `M` for pages 2 and 3).
 
-Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [1-12]`, `VOICE ON|OFF`, `DIR`, `TYPE MEMORY.DAT`,
+Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [N]`, `VOICE ON|OFF`, `DIR`, `TYPE MEMORY.DAT`,
 `MOOD`, `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
 `DOSSHELL <cmd>` (if enabled), `EXIT`.
 
-Try `SAY PARITY` for an authentic crash.
+Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to six turns;
+set `--patient-llm-max-turns <N>` when starting the native client or web server
+to configure its allowed maximum (3256 by default).
 
 ## Voice
 

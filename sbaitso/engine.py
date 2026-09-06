@@ -75,6 +75,7 @@ class EngineArgs:
     allow_shell: bool = False
     fast: bool = False
     debug_llm: bool = False
+    patient_llm_max_turns: int = 3256
 
 
 _SENTENCE_END = re.compile(r"[.!?]+\s|\n")

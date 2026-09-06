@@ -51,7 +51,7 @@ HELP_PAGE_3 = [
     " BRAIN            SHOW MY ACTIVE BRAIN",
     " BRAIN SCAN       RE-PROBE FOR A BETTER BRAIN",
     " BRAIN RETRO      SWITCH TO 1991 RETRO MODE",
-    " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR SESSION",
+    " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR (CONFIGURED MAX)",
     " DIR              LIST WHAT I KNOW (RAM ONLY)",
     " TYPE <FILE>      PRINT MEMORY.DAT OR JOURNAL FILES",
     " MOOD             MOOD LOG AND TREND FOR THIS SESSION",
@@ -362,10 +362,14 @@ class CommandVM:
             try:
                 turns = int(argument)
             except ValueError:
-                yield Say("USAGE: PATIENT LLM [1 TO 12 TURNS].")
+                yield Say(
+                    f"USAGE: PATIENT LLM [1 TO {self.engine.args.patient_llm_max_turns} TURNS]."
+                )
                 return
-        if not 1 <= turns <= 12:
-            yield Say("PATIENT LLM ACCEPTS 1 TO 12 TURNS.")
+        if not 1 <= turns <= self.engine.args.patient_llm_max_turns:
+            yield Say(
+                f"PATIENT LLM ACCEPTS 1 TO {self.engine.args.patient_llm_max_turns} TURNS."
+            )
             return
         async for ev in self.engine.autonomous_patient_session(turns):
             yield ev
