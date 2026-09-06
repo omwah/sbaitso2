@@ -33,7 +33,7 @@ through: `pixi run serve --port 8321`.
    ```
 
 Useful flags: `--brain auto|retro|ollama|remote`, `--model NAME`,
-`--sass LOW|NORMAL|HIGH`, `--palette CGA1|CGA2|EGA|VGA|AMBER`, `--doshell`.
+`--sass LOW|NORMAL|HIGH`, `--palette CGA1|CGA2|EGA|VGA|AMBER`.
 Only `--brain auto` uses the fallback ladder; an explicitly requested
 `ollama` or `remote` brain exits with an error if it cannot be reached.
 In the native frontend, `--debug-llm` prints the outbound JSON request,
@@ -43,13 +43,13 @@ headers).
 
 ## Commands
 
-Authentic (from the 1991 manual): `.QUIT`, `.READ <file>`, `.TONE 0|1`,
+Authentic (from the 1991 manual): `.QUIT`, `.TONE 0|1`,
 `.VOLUME 0-9`, `.PITCH 0-9`, `.SPEED 0-9`, `.PARAM tvps`, `.ECHO ON/OFF`,
 `R` (repeat), `SAY <text>`, `HELP` (then `M` for pages 2 and 3).
 
 Version 2.0: `BRAIN`, `BRAIN SCAN`, `BRAIN RETRO`, `PATIENT LLM [N]`, `VOICE ON|OFF`, `DIR`, `TYPE MEMORY.DAT`,
 `MOOD`, `TOPIC <subject>`, `DEFRAG`, `MSD`, `MATH <expr>`, `COLOR <name>`,
-`DOSSHELL <cmd>` (if enabled), `EXIT`.
+`EXIT`.
 
 Try `SAY PARITY` for an authentic crash. `PATIENT LLM` defaults to 16 turns;
 set `--patient-llm-max-turns <N>` when starting the native client or web server

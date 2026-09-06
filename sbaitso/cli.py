@@ -222,7 +222,6 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         remote_key=args.remote_key,
         sass=args.sass,
         palette=args.palette,
-        allow_shell=args.doshell,
         fast=args.fast,
         debug_llm=getattr(args, "debug_llm", False),
         patient_llm_max_turns=args.patient_llm_max_turns,
@@ -291,7 +290,6 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--remote-key", default=None)
         sp.add_argument("--sass", choices=["LOW", "NORMAL", "HIGH"], default="NORMAL")
         sp.add_argument("--palette", choices=list(PALETTE_FG), default="cga1")
-        sp.add_argument("--doshell", action="store_true", help="enable DOSSHELL command")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
         sp.add_argument(

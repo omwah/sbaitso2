@@ -7,8 +7,6 @@ and every brain mode, including retro.
 
 from __future__ import annotations
 
-import asyncio
-import subprocess
 from collections.abc import AsyncIterator
 
 from .events import Beep, Line, Palette, Quit, Say, VoiceParams
@@ -20,7 +18,6 @@ HELP_PAGE_1 = [
     " DR. SBAITSO COMMANDS (PAGE 1 OF 3)",
     "",
     " .QUIT            QUIT THIS PROGRAM",
-    " .READ <FILE>     READ A TEXT FILE ALOUD",
     " .TONE <0|1>      0=BASS, 1=TREBLE",
     " .VOLUME <0-9>    VOICE VOLUME",
     " .PITCH <0-9>     VOICE PITCH",
@@ -59,13 +56,12 @@ HELP_PAGE_3 = [
     " TOPIC <SUBJECT>  FOCUS OUR CONVERSATION",
     " DEFRAG           COMPACT MY MEMORY",
     " MSD              MENTAL STATUS DISPLAY",
-    " DOSSHELL <CMD>   RUN A REAL COMMAND (IF ENABLED)",
     "",
     " THAT IS ALL. I AM A FINITE PROGRAM.",
 ]
 
 DOT_COMMANDS = (
-    ".quit", ".read", ".tone", ".volume", ".pitch", ".speed",
+    ".quit", ".tone", ".volume", ".pitch", ".speed",
     ".param", ".echo",
 )
 
@@ -76,7 +72,7 @@ _PLAIN_COMMANDS = {
 
 _PREFIX_COMMANDS = (
     "SAY ", "TYPE ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
-    "DOSSHELL ", ".READ ", "VOICE ",
+    "VOICE ",
 )
 
 
@@ -92,7 +88,7 @@ class CommandVM:
             return False
         low = s.lower()
         if low.startswith("."):
-            return low.split()[0] in DOT_COMMANDS or low.startswith(".read ")
+            return low.split()[0] in DOT_COMMANDS
         up = s.upper()
         if up in _PLAIN_COMMANDS:
             return True
@@ -244,11 +240,6 @@ class CommandVM:
                 yield Line(text, color="cyan")
             return
 
-        if up.startswith("DOSSHELL "):
-            async for ev in self._dosshell(s[9:]):
-                yield ev
-            return
-
     # ------------------------------------------------------------------
     async def _dot_command(self, s: str, low: str) -> AsyncIterator:
         tokens = low.split()
@@ -259,14 +250,6 @@ class CommandVM:
         if cmd == ".quit":
             self.engine.quitting = True
             yield Say(f"VERY WELL, {self.engine._name()}. INITIATING SIGN-OFF.")
-            return
-
-        if cmd == ".read":
-            if not args:
-                yield Say("READ WHAT? GIVE ME A FILENAME.")
-                return
-            async for ev in self._read_aloud(" ".join(args)):
-                yield ev
             return
 
         if cmd == ".echo":
@@ -313,21 +296,6 @@ class CommandVM:
             return
 
         yield Say("I DO NOT KNOW THAT DOT COMMAND. TRY HELP.")
-
-    # ------------------------------------------------------------------
-    async def _read_aloud(self, path: str) -> AsyncIterator:
-        try:
-            with open(path, encoding="utf-8", errors="replace") as f:
-                lines = f.readlines()
-        except OSError:
-            yield Say(f"I CANNOT FIND {path.upper()}. THE DOS SHELL IS UNFORGIVING.")
-            return
-        yield Say(f"READING {path.upper()}. SIT BACK.")
-        for line in lines[:200]:
-            yield Line(" " + line.rstrip(), color="white", delay_ms=10)
-        if len(lines) > 200:
-            yield Line(f" ... ({len(lines) - 200} MORE LINES OMITTED. I AM NOT A SCROLLBACK.)", color="dim")
-        yield Say("THERE. I HOPE IT WAS ILLUMINATING.")
 
     async def _type_file(self, name: str) -> AsyncIterator:
         up = name.upper()
@@ -393,31 +361,6 @@ class CommandVM:
                 from .boot import retro_warning
                 for ev in retro_warning():
                     yield ev
-
-    async def _dosshell(self, cmd: str) -> AsyncIterator:
-        if not self.engine.allow_shell:
-            yield Say("DOSSHELL IS DISABLED ON THIS TERMINAL. SENSIBLE, NO?")
-            return
-        if not cmd:
-            yield Say("DOSSHELL NEEDS A COMMAND.")
-            return
-        yield Line(f" C:\\SBAITSO> {cmd}", color="dim")
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-            )
-            out, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
-        except asyncio.TimeoutError:
-            yield Say("THE COMMAND TOOK TOO LONG. I TERMINATED IT. DO NOT TEST ME.")
-            return
-        except Exception:
-            yield Say("THE SHELL REJECTED THAT. HOW EMBARRASSING.")
-            return
-        for line in out.decode(errors="replace").splitlines()[:40]:
-            yield Line(" " + line)
-        yield Say(f"DONE. RETURN CODE {proc.returncode}. BACK TO YOUR PROBLEMS.")
 
     def _msd(self) -> list[str]:
         mem = self.engine.memory

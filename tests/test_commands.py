@@ -3,6 +3,11 @@ from sbaitso.events import Line, Palette, Quit, Say
 from conftest import events_of, says_of
 
 
+def test_user_controlled_file_and_shell_commands_are_not_recognized(engine):
+    assert not engine.commands.recognizes(".READ /etc/passwd")
+    assert not engine.commands.recognizes("DOSSHELL echo UNSAFE")
+
+
 async def test_help_pager(engine):
     ev1 = await events_of(engine, "HELP")
     lines1 = [e.text for e in ev1 if isinstance(e, Line)]

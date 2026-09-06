@@ -20,7 +20,7 @@ from .events import Quit
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
 app = FastAPI(title="DR. SBAITSO/2", docs_url=None, redoc_url=None)
-app.state.engine_args = EngineArgs(brain="auto", allow_shell=False)
+app.state.engine_args = EngineArgs(brain="auto")
 
 
 def configure(engine_args: EngineArgs) -> None:

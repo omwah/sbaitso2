@@ -72,7 +72,6 @@ class EngineArgs:
     remote_key: str | None = None
     sass: str = "NORMAL"
     palette: str = "cga1"
-    allow_shell: bool = False
     fast: bool = False
     debug_llm: bool = False
     patient_llm_max_turns: int = 256
@@ -96,7 +95,6 @@ class Engine:
         self.settings = Settings(
             sass=args.sass.upper(), palette=args.palette, fast=args.fast
         )
-        self.allow_shell = args.allow_shell
         self.memory = SessionMemory()
         self.retro = RetroEngine()
         self.commands = CommandVM(self)
