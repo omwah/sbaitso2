@@ -151,8 +151,9 @@ class Renderer:
         for ch in text:
             if ch == "\n":
                 await self._flush_say_word(color, reveal)
-                sys.stdout.write("\n")
-                self.say_column = 0
+                if self.say_column:
+                    sys.stdout.write("\n")
+                    self.say_column = 0
             elif ch.isspace():
                 await self._flush_say_word(color, reveal)
                 if self.say_column < SAY_WRAP_WIDTH:
@@ -180,8 +181,9 @@ class Renderer:
             await self._write_say_text(ev.text, color, ev.reveal)
             if ev.line_end:
                 await self._flush_say_word(color, ev.reveal)
-                sys.stdout.write("\n")
-                self.say_column = 0
+                if self.say_column:
+                    sys.stdout.write("\n")
+                    self.say_column = 0
             sys.stdout.flush()
             if speech:
                 await speech
@@ -200,7 +202,7 @@ class Renderer:
             sys.stdout.flush()
         elif isinstance(ev, Prompt):
             label = (ev.label or "YOU").upper()
-            print(f"{ANSI['dim']}{RESPONSE_INDENT}{label}> {RESET}", end="", flush=True)
+            print(f"\n{ANSI['dim']}{RESPONSE_INDENT}{label}> {RESET}", end="", flush=True)
             self.say_column = 0
             self.say_word = ""
         elif isinstance(ev, (VoiceParams, VoiceEnabled)):

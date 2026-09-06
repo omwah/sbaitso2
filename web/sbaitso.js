@@ -199,7 +199,7 @@ async function handle(ev) {
       break;
     case "prompt": {
       const label = (ev.label || "YOU").toUpperCase();
-      writeOutput(RESPONSE_INDENT + COLORS.dim + label + "> " + RESET);
+      writeOutput("\r\n" + RESPONSE_INDENT + COLORS.dim + label + "> " + RESET);
       sayColumn = 0;
       sayWord = "";
       inputEnabled = true;
@@ -278,8 +278,10 @@ async function writeWrappedText(text, reveal, perChar) {
   for (const ch of text) {
     if (ch === "\n") {
       await flushSayWord(reveal, perChar);
-      writeOutput("\r\n");
-      sayColumn = 0;
+      if (sayColumn) {
+        writeOutput("\r\n");
+        sayColumn = 0;
+      }
     } else if (/\s/.test(ch)) {
       await flushSayWord(reveal, perChar);
       if (sayColumn < currentWrapWidth()) await writeSayChar(ch, reveal, perChar);
@@ -303,7 +305,7 @@ async function typeOut(
   await writeWrappedText(text, reveal, perChar);
   if (lineEnd) await flushSayWord(reveal, perChar);
   writeOutput(RESET);
-  if (lineEnd) {
+  if (lineEnd && sayColumn) {
     writeOutput("\r\n");
     sayColumn = 0;
   }
