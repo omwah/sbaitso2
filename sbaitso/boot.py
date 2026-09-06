@@ -13,7 +13,7 @@ except PackageNotFoundError:  # pragma: no cover - editable/package installs sup
     VERSION = "0.1.0"
 
 
-def banner_events(neural_link: str) -> list:
+def banner_events(neural_link: str, persona: str = "SBAITSO.SYS") -> list:
     """The boot POST. neural_link: "OK" or "NOT FOUND -> RETRO MODE"."""
     d = 90  # per-line delay for that authentic POST feel
     return [
@@ -22,7 +22,7 @@ def banner_events(neural_link: str) -> list:
         Line("", delay_ms=120),
         Line(" Detecting Sound Blaster ...... OK", wrap=True, delay_ms=d),
         Line(" Loading SBTALKER 2.0 ...... OK", wrap=True, delay_ms=d),
-        Line(" Expanding EMPATHY.SYS ...... OK", wrap=True, delay_ms=d),
+        Line(f" Loading {persona} ...... OK", wrap=True, delay_ms=d),
         Line(f" Probing NEURAL LINK ...... {neural_link}", wrap=True, delay_ms=d),
         Line("", delay_ms=200),
     ]

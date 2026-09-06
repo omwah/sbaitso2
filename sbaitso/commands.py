@@ -63,7 +63,7 @@ DOT_COMMANDS = (
 )
 
 _PLAIN_COMMANDS = {
-    "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "MSD", "DEFRAG",
+    "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "LOAD", "MSD", "DEFRAG",
     "EXIT", "QUIT", "SBIASTO", "SIG", "VOICE",
 }
 
@@ -72,7 +72,7 @@ MAX_PATIENT_LLM_TURNS = 256
 
 
 _PREFIX_COMMANDS = (
-    "SAY ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
+    "SAY ", "COLOR ", "TOPIC ", "MATH ", "LOAD ", "BRAIN SCAN", "PATIENT LLM",
     "VOICE ",
 )
 
@@ -181,7 +181,20 @@ class CommandVM:
                 yield Say("I DO NOT KNOW THAT PALETTE. TRY: " + " ".join(PALETTES) + ".")
             return
 
-        if up.startswith("TOPIC "):
+        if up == "LOAD" or up.startswith("LOAD "):
+            from .persona_loader import display_personas, load_persona
+            if up == "LOAD":
+                yield Say("LOADABLE PERSONAS: " + " ".join(display_personas()))
+                return
+            loaded = load_persona(s[5:])
+            if loaded is None:
+                yield Say("PERSONA NOT FOUND. AVAILABLE: " + " ".join(display_personas()))
+                return
+            self.engine.active_persona, self.engine.persona_prompt = loaded
+            yield Say(f"LOADING {self.engine.active_persona} ... OK. PERSONA MATRIX UPDATED.")
+            return
+
+        if up.startswith("TOPIC "): 
             topic = s[6:].strip()
             if not topic:
                 yield Say("TOPIC OF WHAT? GIVE ME A SUBJECT.")
