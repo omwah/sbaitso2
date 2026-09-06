@@ -37,10 +37,10 @@ def retro_warning() -> list:
     ]
 
 
-def greeting_events() -> list:
+def greeting_events(persona_name: str = "DOCTOR SBAITSO") -> list:
     """The opening monologue, formatted like one streamed response."""
     lines = [
-        ("HELLO, MY NAME IS DOCTOR SBAITSO.", 120),
+        (f"HELLO, MY NAME IS {persona_name.upper()}.", 120),
         ("I AM HERE TO HELP YOU.", 0),
         ("SAY WHATEVER IS IN YOUR MIND FREELY,", 0),
         ("OUR CONVERSATION WILL BE KEPT IN STRICT CONFIDENCE.", 0),

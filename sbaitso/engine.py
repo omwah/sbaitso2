@@ -108,9 +108,11 @@ class Engine:
         loaded_persona = load_persona(args.persona) or load_persona("sbaitso")
         if loaded_persona is None:
             # A partially installed package must not take down a web session.
-            self.active_persona, self.persona_prompt = "SBAITSO.SYS", _BASE_PROMPT
+            self.active_persona, self.persona_name, self.persona_prompt = (
+                "SBAITSO.SYS", "DOCTOR SBAITSO", _BASE_PROMPT
+            )
         else:
-            self.active_persona, self.persona_prompt = loaded_persona
+            self.active_persona, self.persona_name, self.persona_prompt = loaded_persona
         self.topic: str | None = None
         self.quitting = False
         self.startup_error: str | None = None
@@ -383,7 +385,7 @@ class Engine:
         else:
             yield Line(f" Active brain: {self.brain.name}", color="green", delay_ms=150)
             yield Line("", delay_ms=250)
-        for ev in greeting_events():
+        for ev in greeting_events(self.persona_name):
             yield ev
 
     async def _intake(self, inputs: Inputs) -> bool:

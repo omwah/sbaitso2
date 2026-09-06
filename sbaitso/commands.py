@@ -190,7 +190,11 @@ class CommandVM:
             if loaded is None:
                 yield Say("PERSONA NOT FOUND. AVAILABLE: " + " ".join(display_personas()))
                 return
-            self.engine.active_persona, self.engine.persona_prompt = loaded
+            (
+                self.engine.active_persona,
+                self.engine.persona_name,
+                self.engine.persona_prompt,
+            ) = loaded
             yield Say(f"LOADING {self.engine.active_persona} ... OK. PERSONA MATRIX UPDATED.")
             return
 
