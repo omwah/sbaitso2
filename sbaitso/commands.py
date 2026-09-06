@@ -357,7 +357,7 @@ class CommandVM:
 
     async def _patient_llm(self, argument: str) -> AsyncIterator:
         if not argument:
-            turns = 6
+            turns = 16
         else:
             try:
                 turns = int(argument)
