@@ -45,7 +45,7 @@ transcripts. See §9 Sources.
 | Quirks | Mildly insults you if you curse; asks your name & age up front; can do simple mathematics |
 | Crash | **PARITY ERROR** breakdown when you swear repeatedly, or type `SAY PARITY` — then resets itself |
 | Repeat | Type `R` to have him repeat his last utterance |
-| **Dot commands** | Preceded by a dot in the first column: `.QUIT`, `.READ <file>`, `.TONE 0/1` (bass/treble), `.VOLUME 0-9`, `.PITCH 0-9`, `.SPEED 0-9`, `.PARAM tvps`, `.ECHO ON/OFF` |
+| **Dot commands** | Preceded by a dot in the first column: `.QUIT`, `.TONE 0/1` (bass/treble), `.VOLUME 0-9`, `.PITCH 0-9`, `.SPEED 0-9`, `.PARAM tvps`, `.ECHO ON/OFF` |
 | Help system | `HELP` lists commands; `M` pages through **three pages** of commands with usage guidance |
 
 ## 3. Architecture
@@ -251,7 +251,6 @@ Supporting modern techniques layered on top:
 | Command | Function (original behavior) | v2 upgrade |
 |---|---|---|
 | `.QUIT` | quit the program | sign-off + session "prescription" |
-| `.READ <file>` | read a text file aloud | reads any file (md/txt) aloud; period-accurate file reader |
 | `.TONE 0/1` | bass/treble voice tone | direct TTS control (both engines) |
 | `.VOLUME 0-9` | volume scale | direct TTS control |
 | `.PITCH 0-9` | pitch scale | direct TTS control |
@@ -275,7 +274,6 @@ Supporting modern techniques layered on top:
 | `TOPIC <subject>` | Refocus session ("LET US DISCUSS WORK") | conversation steering |
 | `DEFRAG` | Compact/summarize in-memory context | context management |
 | `MSD` | "Mental Status Display": turns, words, mood trend, brain | session dashboard |
-| `DOSSHELL` | Temporarily drop to a real shell prompt (run actual commands) | power feature |
 | `EXIT` / `QUIT` | Sign-off + "prescription" summary of the session, printed to screen — copy it somewhere safe, because the doctor won't remember it | exit report |
 | `MATH <expr>` | "simple mathematics", per the manual | LLM/tool calculator, in character |
 
@@ -324,8 +322,6 @@ Consequences, all of them good:
 - **The exit "prescription" is the session's legacy:** a printed summary
   (topics discussed, mood arc, suggested next steps). The user owns it
   from there — copy it, pipe it, or let it vanish with the session.
-- **`.READ <file>`** still works (reading user files is input, not
-  persistence) — the doctor can read a note *to* you, but never keeps it.
 - **Crash semantics:** a PARITY ERROR "reset" can even be played as a
   partial memory wipe — dramatic, authentic, and true to the design.
 - The only things that survive a session are the process exit code and
@@ -389,7 +385,7 @@ sbaitso2/
       mid-session failover banner
 - [ ] In-session rolling summary + fact store (RAM only, no save/load)
 - [ ] Authentic commands: `R`/`REP`, `SAY`, `.QUIT`, `HELP` + `M` pager,
-      `.READ`, `.ECHO`, `.TONE/.VOLUME/.PITCH/.SPEED/.PARAM` (wired to TTS)
+      `.ECHO`, `.TONE/.VOLUME/.PITCH/.SPEED/.PARAM` (wired to TTS)
 - [ ] v2 commands: BRAIN, EXIT, VOICE, COLOR
 
 ### Phase 2 — The Voice (1 day)
@@ -411,7 +407,7 @@ sbaitso2/
 ### Phase 4 — Polish & soul (1 day)
 - [ ] Crisis layer + supportive in-character responses (all brain modes)
 - [ ] Easter eggs, glitch flavor, PARITY ERROR gag
-- [ ] Palette themes, DOSSHELL, session exit "prescription"
+- [ ] Palette themes, session exit "prescription"
 - [ ] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
 
 ### Phase 5 — optional extras
