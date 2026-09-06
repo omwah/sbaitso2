@@ -1,6 +1,6 @@
 """The brain ladder: Ollama -> Remote API -> Retro v1 (1991 mode).
 
-The doctor never refuses to see you.
+Only auto mode uses the whole ladder; explicitly requested brains are strict.
 """
 
 from __future__ import annotations

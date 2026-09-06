@@ -158,8 +158,8 @@ class Renderer:
                 await self.espeak.drain()
 
 
-async def _run(args: argparse.Namespace) -> None:
-    engine_args = EngineArgs(
+def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
+    return EngineArgs(
         brain=args.brain,
         ollama_url=args.ollama_url,
         model=args.model,
@@ -171,7 +171,10 @@ async def _run(args: argparse.Namespace) -> None:
         allow_shell=args.doshell,
         fast=args.fast,
     )
-    engine = Engine.from_args(engine_args)
+
+
+async def _run(args: argparse.Namespace) -> int:
+    engine = Engine.from_args(engine_args_from_namespace(args))
     inputs = Inputs()
     renderer = Renderer(fast=args.fast, voice=not args.novoice)
 
@@ -193,6 +196,7 @@ async def _run(args: argparse.Namespace) -> None:
         finally:
             reader.stop()
             print(RESET, end="")
+    return 1 if engine.startup_error else 0
 
 
 def _start_line_input(loop: asyncio.AbstractEventLoop, inputs: Inputs) -> None:
@@ -253,11 +257,12 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "serve":
         import uvicorn
 
-        from .main import app
+        from .main import app, configure
 
+        configure(engine_args_from_namespace(args))
         uvicorn.run(app, host=args.host, port=args.port)
     else:
-        asyncio.run(_run(args))
+        raise SystemExit(asyncio.run(_run(args)))
 
 
 if __name__ == "__main__":
