@@ -397,9 +397,9 @@ sbaitso2/
 - [x] Exit "prescription" builder (printed summary; nothing saved)
 
 ### Phase 4 — Polish & soul (1 day)
-- [ ] Crisis layer + supportive in-character responses (all brain modes)
-- [ ] Easter eggs, glitch flavor, PARITY ERROR gag
-- [ ] Palette themes, session exit "prescription"
+- [x] Crisis layer + supportive in-character responses (all brain modes)
+- [x] Easter eggs, glitch flavor, PARITY ERROR gag
+- [x] Palette themes, session exit "prescription"
 - [x] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
 
 ### Phase 5 — optional extras
