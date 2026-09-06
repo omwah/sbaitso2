@@ -50,6 +50,7 @@ HELP_PAGE_3 = [
     "",
     " BRAIN            SHOW MY ACTIVE BRAIN",
     " BRAIN SCAN       RE-PROBE FOR A BETTER BRAIN",
+    " BRAIN RETRO      SWITCH TO 1991 RETRO MODE",
     " DIR              LIST WHAT I KNOW (RAM ONLY)",
     " TYPE <FILE>      PRINT MEMORY.DAT OR JOURNAL FILES",
     " MOOD             MOOD LOG AND TREND FOR THIS SESSION",
@@ -68,7 +69,7 @@ DOT_COMMANDS = (
 )
 
 _PLAIN_COMMANDS = {
-    "R", "REP", "HELP", "BRAIN", "DIR", "MOOD", "MSD", "DEFRAG",
+    "R", "REP", "HELP", "BRAIN", "BRAIN RETRO", "DIR", "MOOD", "MSD", "DEFRAG",
     "EXIT", "QUIT", "SBIASTO", "SIG", "VOICE",
 }
 
@@ -153,12 +154,18 @@ class CommandVM:
                 yield ev
             return
 
+        if up == "BRAIN RETRO":
+            brain = self.engine.switch_to_retro()
+            yield Say(f"RETRO MODE ENGAGED. ACTIVE BRAIN: {brain.name}.")
+            yield Say("I WILL NOW BE CHARMINGLY LIMITED.")
+            return
+
         if up == "BRAIN":
             brain = self.engine.brain
             ladder = ", ".join(b.name for b in self.engine.brains)
             yield Say(f"ACTIVE BRAIN: {brain.name}.")
             yield Say(f"LADDER: {ladder}.")
-            yield Say("I PROBE IN ORDER AND NEVER DIE. TYPE BRAIN SCAN TO RE-PROBE.")
+            yield Say("TYPE BRAIN SCAN TO RE-PROBE, OR BRAIN RETRO FOR 1991 MODE.")
             return
 
         if up == "DIR":
