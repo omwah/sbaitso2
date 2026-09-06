@@ -38,6 +38,7 @@ ANSI = {
 }
 RESET = "\x1b[0m"
 SAY_WRAP_WIDTH = 72
+RESPONSE_INDENT = " "
 
 PALETTE_FG = {
     "cga1": ANSI["cyan"],
@@ -117,6 +118,11 @@ class Renderer:
         self.say_column = 0
         self.say_word = ""
 
+    def _ensure_response_indent(self, color: str) -> None:
+        if self.say_column == 0:
+            sys.stdout.write(f"{color}{RESPONSE_INDENT}{RESET}")
+            self.say_column = len(RESPONSE_INDENT)
+
     async def _write_char(self, ch: str, color: str, reveal: bool) -> None:
         sys.stdout.write(f"{color}{ch}{RESET}")
         self.say_column += 1
@@ -131,10 +137,12 @@ class Renderer:
         if self.say_column and self.say_column + len(self.say_word) > SAY_WRAP_WIDTH:
             sys.stdout.write("\n")
             self.say_column = 0
+        self._ensure_response_indent(color)
         for ch in self.say_word:
             if self.say_column >= SAY_WRAP_WIDTH:
                 sys.stdout.write("\n")
                 self.say_column = 0
+                self._ensure_response_indent(color)
             await self._write_char(ch, color, reveal)
         self.say_word = ""
 
@@ -192,7 +200,7 @@ class Renderer:
             sys.stdout.flush()
         elif isinstance(ev, Prompt):
             label = (ev.label or "YOU").upper()
-            print(f"{ANSI['dim']}{label}> {RESET}", end="", flush=True)
+            print(f"{ANSI['dim']}{RESPONSE_INDENT}{label}> {RESET}", end="", flush=True)
             self.say_column = 0
             self.say_word = ""
         elif isinstance(ev, (VoiceParams, VoiceEnabled)):
