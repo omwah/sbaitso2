@@ -378,6 +378,9 @@ def build_parser() -> argparse.ArgumentParser:
     common(serve)
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
+    tui = sub.add_parser("tui", help="run the fullscreen Textual frontend")
+    common(tui)
+
     native = sub.add_parser("run", help="run the native terminal frontend (default)")
     common(native)
     native.add_argument(
@@ -391,7 +394,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     argv = list(sys.argv[1:] if argv is None else argv)
     # default subcommand: run
-    if not argv or (argv[0] != "run" and argv[0] != "serve"):
+    if not argv or argv[0] not in {"run", "serve", "tui"}:
         argv = ["run"] + argv
     args = build_parser().parse_args(argv)
     if args.cmd == "serve":
@@ -401,6 +404,9 @@ def main(argv: list[str] | None = None) -> None:
 
         configure(engine_args_from_namespace(args))
         uvicorn.run(app, host=args.host, port=args.port)
+    elif args.cmd == "tui":
+        from .tui import run_tui
+        run_tui(engine_args_from_namespace(args))
     else:
         raise SystemExit(asyncio.run(_run(args)))
 

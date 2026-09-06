@@ -404,8 +404,8 @@ sbaitso2/
 
 ### Phase 5 — optional extras
 - [x] Bundled complete persona loader (`LOAD <PERSONA>.SYS`)
-- [ ] Textual-based fancy TUI
-- [ ] Remote-API rung polish (provider autodetect from env keys)
+- [x] Textual-based fancy TUI (`sbaitso tui`)
+- [x] Remote-API rung polish (OpenAI-compatible provider autodetect from env keys)
 
 ## 7. Risks / open questions
 
