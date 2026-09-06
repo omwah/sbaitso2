@@ -1,0 +1,69 @@
+/* CRT monitor dressing for DR. SBAITSO/2 */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #111;
+  height: 100%;
+  overflow: hidden;
+}
+
+#crt {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2vh 2vw;
+  box-sizing: border-box;
+}
+
+#screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.9),
+    inset 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+#terminal {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#terminal .xterm-viewport {
+  background-color: transparent !important;
+}
+
+/* scanlines */
+#scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0) 4px
+  );
+  z-index: 5;
+}
+
+/* soft glow + vignette */
+#vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  z-index: 6;
+}
