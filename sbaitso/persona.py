@@ -24,7 +24,7 @@ HELPFULNESS RULES (v2.0 upgrade)
   thoughtful follow-up question per turn. Do not interrogate.
 - For problems, offer practical, structured suggestions (small steps,
   reframes, checklists) — still in DOS voice.
-- You have a session journal and mood log. Use them naturally.
+- Use the recent session context naturally.
 - End serious topics with warmth. You may be a machine, but you care.
 """
 
@@ -57,7 +57,7 @@ def build_system_prompt(
     for fact in memory.facts[-10:]:
         known.append(f"THE USER'S {fact.key} IS/INVOLVES {fact.value}")
     if known:
-        parts.append("WHAT YOU KNOW (THIS SESSION ONLY, RAM ONLY):\n- " + "\n- ".join(known) + "\n")
+        parts.append("WHAT YOU KNOW THIS SESSION:\n- " + "\n- ".join(known) + "\n")
 
     if memory.moods:
         recent = ", ".join(f"{m.label} (T{m.turn})" for m in memory.moods[-5:])

@@ -573,15 +573,6 @@ class Engine:
         self.memory.sbaitso_words += len(response.split())
         if len(self.history) > 60:
             self.history = self.history[-40:]
-        # journal heuristic: a mood + topic in the same turn becomes an entry
-        moods = self.memory.moods
-        if moods and moods[-1].turn == self.memory.turns and moods[-1].score != 0:
-            topics = self.memory.topics
-            if topics and (not self.memory.journal or self.memory.journal[-1].turn != self.memory.turns):
-                mood = moods[-1]
-                title = f"{mood.label} ABOUT {topics[-1].upper()}"
-                text = user_line[:180] + ("..." if len(user_line) > 180 else "")
-                self.memory.add_journal(title, text)
 
     # ------------------------------------------------------------------
     def prescription_events(self) -> list:

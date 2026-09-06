@@ -1,4 +1,4 @@
-"""Session memory — RAM only. Nothing is ever written to disk.
+"""Session memory. Nothing is ever written to disk.
 
 The original promised: "MEMORY CONTENTS WILL BE WIPED OFF AFTER YOU LEAVE."
 We honor it by architecture: everything here is dataclasses in the Engine
@@ -62,22 +62,13 @@ class MoodEntry:
 
 
 @dataclass
-class JournalEntry:
-    idx: int
-    turn: int
-    title: str
-    text: str
-
-
-@dataclass
 class SessionMemory:
-    """Everything the doctor knows about this session. RAM only."""
+    """Everything the doctor knows about this session."""
 
     name: str | None = None
     age: int | None = None
     facts: list[Fact] = field(default_factory=list)
     moods: list[MoodEntry] = field(default_factory=list)
-    journal: list[JournalEntry] = field(default_factory=list)
     topics: list[str] = field(default_factory=list)
     turns: int = 0
     user_words: int = 0
@@ -125,6 +116,16 @@ class SessionMemory:
             add("HOME", m.group(1))
 
     def _extract_mood(self, low: str) -> None:
+        explicit = re.search(
+            r"\b(?:i (?:am )?feeling|i feel|my mood(?: is)?)\s+(.+)",
+            low,
+        )
+        if explicit:
+            for word in re.findall(r"[a-z]+", explicit.group(1)):
+                if word in MOOD_KEYWORDS:
+                    score, label = MOOD_KEYWORDS[word]
+                    self.moods.append(MoodEntry(self.turns, score, label))
+                    return
         for word, (score, label) in MOOD_KEYWORDS.items():
             if re.search(rf"\b{word}\b", low):
                 self.moods.append(MoodEntry(self.turns, score, label))
@@ -138,14 +139,6 @@ class SessionMemory:
     # ------------------------------------------------------------------
     def add_mood(self, score: int, label: str) -> None:
         self.moods.append(MoodEntry(self.turns, score, label))
-
-    def add_journal(self, title: str, text: str) -> JournalEntry:
-        entry = JournalEntry(
-            idx=len(self.journal) + 1, turn=self.turns,
-            title=title.upper(), text=text,
-        )
-        self.journal.append(entry)
-        return entry
 
     def mood_trend(self) -> str:
         if len(self.moods) < 2:
@@ -161,26 +154,3 @@ class SessionMemory:
             return "DESCENDING"
         return "STEADY"
 
-    def mood_chart(self) -> list[str]:
-        if not self.moods:
-            return [" NO MOODS LOGGED YET. TELL ME HOW YOU FEEL."]
-        lines = [" MOOD LOG (THIS SESSION ONLY — RAM ONLY)"]
-        for m in self.moods:
-            bar = "\u2593" * (abs(m.score) * 5) or "\u2591"
-            lines.append(f" T{m.turn:03d}  {m.label:<13} {bar}")
-        lines.append(f" TREND: {self.mood_trend()}")
-        return lines
-
-    def snapshot_lines(self) -> list[str]:
-        """The DIR listing — a virtual DOS filesystem over RAM."""
-        lines = [
-            " Volume in drive C is SBAITSO",
-            " Directory of C:\\SBAITSO",
-            "",
-        ]
-        lines.append(f" MEMORY   DAT     {len(self.facts):>4} FACT(S)      [RAM ONLY]")
-        lines.append(f" MOOD     LOG     {len(self.moods):>4} ENTRY(IES)   [RAM ONLY]")
-        lines.append(f" JOURNAL  \\       {len(self.journal):>4} ENTRY(IES)   [RAM ONLY]")
-        total = len(self.facts) + len(self.moods) + len(self.journal)
-        lines.append(f"        {total} file(s) on a drive that does not exist")
-        return lines

@@ -25,7 +25,7 @@ conversational tooling.
 4. **The doctor keeps his promise — zero persistence.** The original said
    "MEMORY CONTENTS WILL BE WIPED OFF AFTER YOU LEAVE," and we honor it
    literally: memory is rich *within* a session (rolling summary, facts,
-   moods, journal) and vanishes when you exit. No database, no config files,
+   moods) and vanishes when you exit. No database, no config files,
    nothing written to disk. Privacy by architecture, not by policy.
 5. **Safety rails, retro flavor.** Modern expectations (crisis detection,
    disclaimers) delivered in period-appropriate voice.
@@ -74,12 +74,12 @@ transcripts. See §9 Sources.
 │  │ memory     │ │ layer      │   BRAIN LADDER       │
 │  │ (facts,    │ │ (crisis    │   ┌───────────────┐  │
 │  │  moods,    │ │  detect)   │   │ 1 Ollama (ws) │  │
-│  │  journal — │ └────────────┘   │ 2 Remote API  │  │
-│  │  RAM ONLY) │                  │ 3 RETRO v1    │  │
+│  │   facts —  │ └────────────┘   │ 2 Remote API  │  │
+│  │            │                  │ 3 RETRO v1    │  │
 │  └────────────┘                  │   engine      │  │
 │  ┌────────────┐                  └───────┬───────┘  │
 │  │ Tools      │                          │          │
-│  │ (journal/  │                          │          │
+│  │ (facts/    │                          │          │
 │  │  mood/dir) │                          │          │
 │  └────────────┘                          │          │
 └──────────────────────────────────────────┼──────────┘
@@ -221,22 +221,22 @@ HELPFULNESS RULES (v2.0 upgrade)
   thoughtful follow-up question per turn. Do not interrogate.
 - For problems, offer practical, structured suggestions (small steps,
   reframes, checklists) — still in DOS voice.
-- You have tools: journal entries, mood tracking, memory of facts the
-  user tells you. Use them naturally.
+- You have session mood signals and memory of facts the user tells you.
+  Use them naturally.
 - Keep responses under ~120 words unless the user asks for depth.
 ```
 
 Supporting modern techniques layered on top:
 - **Streaming** token output → typewriter effect synced to TTS.
-- **Session memory (RAM only):** rolling summary (LLM-compressed) +
+- **Session memory:** rolling summary (LLM-compressed) +
   in-session fact store (name, age, job, concerns, advice given so far).
   Everything lives in dataclasses in the Engine; process exit wipes it.
 - **Structured extraction pass** (separate cheap call or tool calls):
   after each turn, extract `mood`, `topics`, `new facts` → session memory.
   Skipped in retro mode (fact capture falls back to a small regex set:
   "MY NAME IS X", "I AM N YEARS OLD", "I WORK AS X").
-- **Tool use:** journal write (session journal), `MOOD` log, web lookups
-  (delivered as "CONSULTING MY MEDICAL DATABASE").
+- **Tool use:** session fact and mood context, web lookups (delivered as
+  "CONSULTING MY MEDICAL DATABASE").
 - **Crisis layer:** keyword + LLM classifier before response composition.
   In retro mode, keyword-only. If self-harm signals → warm, direct,
   supportive response with 988 (US) / local equivalents, delivered in
@@ -267,9 +267,6 @@ Supporting modern techniques layered on top:
 |---|---|---|
 | `BRAIN` | Show which brain is active (OLLAMA / REMOTE / RETRO v1) | model transparency |
 | `BRAIN SCAN` | Re-probe the brain ladder, switch if better one is up | failover control |
-| `DIR` | List what he knows about you *this session*: facts + journal entries | session memory browser |
-| `TYPE JOURNAL.001` | Print a journal entry | session journal reader |
-| `MOOD` | ASCII bar chart of this session's logged moods | in-session mood tracking |
 | `COLOR CGA1/CGA2/EGA/VGA` | Palette themes | theming |
 | `TOPIC <subject>` | Refocus session ("LET US DISCUSS WORK") | conversation steering |
 | `DEFRAG` | Compact/summarize in-memory context | context management |
@@ -299,7 +296,7 @@ retro mode.
 - Sound: PC speaker beeps on boot, keyclick option, Sound Blaster
   "cha-ching" sample reference on startup.
 
-### 4.5 Memory model — session-scoped, RAM only (no persistence)
+### 4.5 Memory model — session-scoped (no persistence)
 
 **Nothing is ever written to disk.** No database, no config file, no
 session saves. All state lives in dataclasses inside the Engine process,
@@ -310,8 +307,6 @@ C:\SBAITSO\                (virtual — exists only for this session)
   SBAITSO.EXE              (the running process)
   CONFIG.SB                (runtime settings: palette, voice, sass — set
                             via commands/CLI flags, never saved)
-  MEMORY.DAT                (in-session facts, dataclasses)
-  JOURNAL\                  (in-session journal entries, dataclasses)
 ```
 
 Consequences, all of them good:
@@ -355,8 +350,8 @@ sbaitso2/
     brains.py        # BrainProvider ladder: ollama / remote / retro_v1
     retro.py         # 1991 pattern engine (ELIZA-style, canned+reflect)
     llm.py           # Ollama/remote streaming clients
-    commands.py      # DOS command VM (HELP/BRAIN/DIR/TYPE/MOOD/REP/...)
-    memory.py        # session memory: facts, moods, journal (RAM-only dataclasses)
+    commands.py      # DOS command VM (HELP/BRAIN/TYPE/REP/...)
+    memory.py        # session memory: facts and mood signals (RAM-only dataclasses)
     safety.py        # crisis classifier (keywords + LLM check)
     session.py       # rolling summary, exit "prescription" builder
   web/
@@ -383,7 +378,7 @@ sbaitso2/
       reflections, fact-regex memory — the offline fallback
 - [ ] Boot-time brain probing, `BRAIN` / `BRAIN SCAN` commands,
       mid-session failover banner
-- [ ] In-session rolling summary + fact store (RAM only, no save/load)
+- [ ] In-session rolling summary + fact store (no save/load)
 - [ ] Authentic commands: `R`/`REP`, `SAY`, `.QUIT`, `HELP` + `M` pager,
       `.ECHO`, `.TONE/.VOLUME/.PITCH/.SPEED/.PARAM` (wired to TTS)
 - [ ] v2 commands: BRAIN, EXIT, VOICE, COLOR
@@ -399,8 +394,7 @@ sbaitso2/
 
 ### Phase 3 — Session memory & Tools (1–2 days)
 - [ ] In-session fact extraction (tool calls; regex path for retro)
-- [ ] Session JOURNAL\ writing + `DIR` / `TYPE` browsing
-- [ ] `MOOD` logging (session-scoped) + ASCII chart
+- [ ] Session fact extraction shown in `MSD`
 - [ ] `DEFRAG`, `MSD`, `TOPIC`
 - [ ] Exit "prescription" builder (printed summary; nothing saved)
 
@@ -447,8 +441,7 @@ sbaitso2/
 2. Five minutes later they've told it something real, and this session's
    Dr. Sbaitso knows their name, their boss's name, and how their mood
    shifted since they sat down.
-3. They type `DIR` and see the *conversation so far* summarized as DOS
-   files — facts, journal, mood log, all of it labeled `RAM ONLY`.
+3. They type `MSD` and see extracted session facts.
 4. They kill Ollama mid-conversation and the doctor *keeps talking* —
    dumber, but never dead.
 5. They turn the volume up just to hear the voice say their name.
