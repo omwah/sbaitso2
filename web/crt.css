@@ -31,9 +31,10 @@ html, body {
 
 #terminal {
   width: 100%;
-  height: 100%;
+  /* Reserve visible space below xterm; its canvas does not honor host padding. */
+  height: calc(100% - 48px);
   /* Left text starts after the one-character response/banner gutter. */
-  padding: 16px calc(18px + 1ch) 32px 18px;
+  padding: 16px calc(18px + 1ch) 0 18px;
   box-sizing: border-box;
 }
 
