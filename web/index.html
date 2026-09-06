@@ -24,14 +24,20 @@
           <button id="keyclick-toggle" class="sound-toggle" type="button" role="switch" aria-checked="false" aria-label="Enable keyclick"><span class="toggle-knob"></span></button>
         </div>
         <div class="voice-controls">
-          <label for="tone-control">TONE <output id="tone-value">TREBLE</output></label>
-          <input id="tone-control" type="range" min="0" max="1" step="1" value="1" aria-label="Voice tone">
-          <label for="volume-control">VOLUME <output id="volume-value">5</output></label>
-          <input id="volume-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice volume">
-          <label for="pitch-control">PITCH <output id="pitch-value">5</output></label>
-          <input id="pitch-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice pitch">
-          <label for="speed-control">SPEED <output id="speed-value">5</output></label>
-          <input id="speed-control" type="range" min="0" max="9" step="1" value="5" aria-label="Voice speed">
+          <label for="preset-control">VOICE PRESET</label>
+          <select id="preset-control" aria-label="S.A.M. voice preset">
+            <option value="sam">SAM</option><option value="elf">ELF</option>
+            <option value="robot">LITTLE ROBOT</option><option value="stuffy">STUFFY GUY</option>
+            <option value="lady">LITTLE OLD LADY</option><option value="alien">EXTRA-TERRESTRIAL</option>
+          </select>
+          <label for="speed-control">SPEED <output id="speed-value">72</output></label>
+          <input id="speed-control" type="range" min="0" max="255" step="1" value="72" aria-label="Voice speed">
+          <label for="pitch-control">PITCH <output id="pitch-value">64</output></label>
+          <input id="pitch-control" type="range" min="0" max="255" step="1" value="64" aria-label="Voice pitch">
+          <label for="mouth-control">MOUTH <output id="mouth-value">128</output></label>
+          <input id="mouth-control" type="range" min="0" max="255" step="1" value="128" aria-label="Voice mouth">
+          <label for="throat-control">THROAT <output id="throat-value">128</output></label>
+          <input id="throat-control" type="range" min="0" max="255" step="1" value="128" aria-label="Voice throat">
         </div>
       </aside>
       <div id="scanlines"></div>
