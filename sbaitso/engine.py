@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from .boot import GLITCH_LINE, banner_events, greeting_events, parity_events, retro_warning
 from .brains import Brain, BrainContext, OllamaBrain, RemoteBrain, RetroBrain
 from .commands import CommandVM
-from .events import Clear, Line, Prompt, Quit, Say
+from .events import Clear, Line, Palette, Prompt, Quit, Say
 from .llm import OllamaClient, RemoteClient
 from .memory import Fact, SessionMemory
 from .persona import assemble_messages
@@ -338,6 +338,9 @@ class Engine:
         yield Quit()
 
     async def _boot(self) -> AsyncIterator:
+        # Frontends need this before any boot output so --color is visible
+        # from the first frame, not only after a COLOR command.
+        yield Palette(self.settings.palette, announce=False)
         probe: list = []
         async for ev in self.probe_boot():
             probe.append(ev)

@@ -48,6 +48,28 @@ PALETTE_FG = {
     "amber": "\x1b[33m",
 }
 
+# OSC palette control is supported by xterm-compatible terminals. Unsupported
+# terminals ignore it and keep the existing ANSI foreground-only fallback.
+AMBER_ANSI = (
+    "#260700", "#ff7a24", "#ff9a3d", "#ffc35a",
+    "#b95a1b", "#e07025", "#ffb347", "#ffd18a",
+    "#7a3515", "#ff8a32", "#ffad4d", "#ffd36b",
+    "#d76a22", "#f08a35", "#ffd18a", "#ffe0a3",
+)
+
+
+def apply_native_palette(name: str) -> None:
+    """Apply Amber as a phosphor palette where terminal OSC is supported."""
+    if not sys.stdout.isatty():
+        return
+    if name == "amber":
+        ansi = "".join(f"\x1b]4;{index};{color}\x07" for index, color in enumerate(AMBER_ANSI))
+        sys.stdout.write(ansi + "\x1b]10;#ffb347\x07\x1b]11;#160400\x07\x1b]12;#ffd36b\x07")
+    else:
+        # Restore indexed, foreground, background, and cursor colors after Amber.
+        sys.stdout.write("\x1b]104\x07\x1b]110\x07\x1b]111\x07\x1b]112\x07")
+    sys.stdout.flush()
+
 
 @contextmanager
 def raw_stdin():
@@ -192,7 +214,9 @@ class Renderer:
             sys.stdout.flush()
         elif isinstance(ev, Palette):
             self.say_color = PALETTE_FG.get(ev.name, self.say_color)
-            print(f"{ANSI['yellow']}PALETTE: {ev.name.upper()}{RESET}")
+            apply_native_palette(ev.name)
+            if ev.announce:
+                print(f"{ANSI['yellow']}PALETTE: {ev.name.upper()}{RESET}")
             self.say_column = 0
             self.say_word = ""
         elif isinstance(ev, Clear):
@@ -221,7 +245,7 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         remote_model=args.remote_model,
         remote_key=args.remote_key,
         sass=args.sass,
-        palette=args.palette,
+        palette=args.color,
         fast=args.fast,
         debug_llm=getattr(args, "debug_llm", False),
         patient_llm_max_turns=args.patient_llm_max_turns,
@@ -250,6 +274,7 @@ async def _run(args: argparse.Namespace) -> int:
                 await renderer.render(ev)
         finally:
             reader.stop()
+            apply_native_palette("cga1")
             print(RESET, end="")
     return 1 if engine.startup_error else 0
 
@@ -289,7 +314,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--remote-model", default=None)
         sp.add_argument("--remote-key", default=None)
         sp.add_argument("--sass", choices=["LOW", "NORMAL", "HIGH"], default="NORMAL")
-        sp.add_argument("--palette", choices=list(PALETTE_FG), default="cga1")
+        sp.add_argument("--color", choices=list(PALETTE_FG), default="cga1")
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
         sp.add_argument(

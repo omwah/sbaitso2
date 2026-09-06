@@ -15,8 +15,14 @@ const PALETTES = {
            brightBlack: "#6666aa" },
   vga:   { background: "#0a0a0a", foreground: "#c8c8c8", cursor: "#c8c8c8",
            brightBlack: "#555555" },
-  amber: { background: "#0a0500", foreground: "#ffb000", cursor: "#ffb000",
-           brightBlack: "#663300" },
+  amber: {
+    background: "#160400", foreground: "#ffb347", cursor: "#ffd36b",
+    black: "#260700", red: "#ff7a24", green: "#ff9a3d", yellow: "#ffc35a",
+    blue: "#b95a1b", magenta: "#e07025", cyan: "#ffb347", white: "#ffd18a",
+    brightBlack: "#7a3515", brightRed: "#ff8a32", brightGreen: "#ffad4d",
+    brightYellow: "#ffd36b", brightBlue: "#d76a22", brightMagenta: "#f08a35",
+    brightCyan: "#ffd18a", brightWhite: "#ffe0a3",
+  },
 };
 
 const COLORS = {
@@ -278,6 +284,7 @@ async function handle(ev) {
                    vga: COLORS.white, amber: COLORS.yellow }[ev.name] || COLORS.cyan;
       document.body.style.background =
         (PALETTES[ev.name] || PALETTES.cga1).background;
+      document.body.classList.toggle("amber-display", ev.name === "amber");
       break;
     case "clear":
       term.clear();
