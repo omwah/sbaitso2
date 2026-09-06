@@ -151,7 +151,9 @@ async function handle(ev) {
       const echo = ev.voice === "echo";
       const spokenText = ev.speech_text || ev.text;
       const duration = ev.partial ? 0 : speak(spokenText, echo);
-      await typeOut(ev.text, ev.reveal, echo, duration, ev.partial);
+      await typeOut(
+        ev.text, ev.reveal, echo, duration, ev.partial, ev.line_end !== false
+      );
       break;
     }
     case "beep":
@@ -207,7 +209,9 @@ async function handle(ev) {
   }
 }
 
-async function typeOut(text, reveal, echoVoice, spokenSec, partial = false) {
+async function typeOut(
+  text, reveal, echoVoice, spokenSec, partial = false, lineEnd = true
+) {
   const color = echoVoice ? COLORS.dim : sayColor;
   term.write(color);
   let perChar = 14;
@@ -225,7 +229,7 @@ async function typeOut(text, reveal, echoVoice, spokenSec, partial = false) {
     term.write(text);
   }
   term.write(RESET);
-  if (!partial) term.write("\r\n");
+  if (lineEnd) term.write("\r\n");
   // Let longer utterances finish before the next line starts.
   if (!partial && spokenSec > 0) {
     const typed = (reveal ? perChar * text.length : 0) / 1000;

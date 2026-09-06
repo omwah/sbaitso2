@@ -37,9 +37,10 @@ class Line(Event):
 class Say(Event):
     """Doctor speech: typewriter reveal + TTS.
 
-    ``partial`` appends streamed LLM text without a newline or audio. The
-    following final event can carry ``speech_text`` so the frontend speaks the
-    complete sentence once, rather than stuttering one token at a time.
+    ``partial`` appends streamed LLM text without audio. ``line_end`` lets a
+    stream keep all of its chunks on one display line. A final event can carry
+    ``speech_text`` so the frontend speaks the complete sentence once, rather
+    than stuttering one token at a time.
 
     voice: "main" for the doctor, "echo" for the .ECHO second voice.
     """
@@ -48,6 +49,7 @@ class Say(Event):
     reveal: bool = True
     voice: str = "main"
     partial: bool = False
+    line_end: bool = True
     speech_text: str | None = None
     delay_ms: int = 0
 

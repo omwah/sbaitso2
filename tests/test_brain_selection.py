@@ -89,10 +89,13 @@ async def test_llm_deltas_render_partially_then_speak_complete_sentence():
     events = [event async for event in engine.handle("SHOW ME PROGRESS.")]
     says = [event for event in events if isinstance(event, Say)]
 
-    assert any(event.partial for event in says)
-    assert "".join(event.text for event in says) == (
+    content_says = [event for event in says if event.text]
+    assert any(event.partial for event in content_says)
+    assert "".join(event.text for event in content_says) == (
         "THIS IS A STREAMED RESPONSE THAT ARRIVES IN PIECES."
     )
-    final = says[-1]
+    assert all(event.line_end is False for event in content_says)
+    assert says[-1].text == "" and says[-1].line_end is True
+    final = content_says[-1]
     assert final.partial is False
     assert final.speech_text == "THIS IS A STREAMED RESPONSE THAT ARRIVES IN PIECES."
