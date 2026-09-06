@@ -385,17 +385,16 @@ sbaitso2/
 
 ### Phase 2 — The Voice (1 day)
 - [x] sam-js integration (web); char-reveal synced to speech
-- [ ] Pre-render web boot/name speech (on-demand synthesis can lag reveal)
 - [x] espeak-ng path (native) via `asyncio.subprocess`, honoring
       `.PITCH/.SPEED/.VOLUME` params
 - [x] `.ECHO ON/OFF` second voice (both engines)
 - [x] Boot beeps + optional keyclick toggle (Web Audio; terminal bell for native)
 
 ### Phase 3 — Session memory & Tools (1–2 days)
-- [ ] In-session fact extraction (tool calls; regex path for retro)
-- [ ] Session fact extraction shown in `MSD`
-- [ ] `DEFRAG`, `MSD`, `TOPIC`
-- [ ] Exit "prescription" builder (printed summary; nothing saved)
+- [x] In-session fact extraction (JSON-structured LLM enrichment; regex fallback for Retro)
+- [x] Session fact extraction shown in `MSD`
+- [x] `DEFRAG`, `MSD`, `TOPIC`
+- [x] Exit "prescription" builder (printed summary; nothing saved)
 
 ### Phase 4 — Polish & soul (1 day)
 - [ ] Crisis layer + supportive in-character responses (all brain modes)
