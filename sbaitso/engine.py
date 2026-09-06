@@ -218,16 +218,19 @@ class Engine:
                     self.memory.facts.append(
                         Fact("AGE", f"{self.memory.age} YEARS OLD", 0)
                     )
-                    yield Say(age_reaction(self.memory.age))
+                    yield Say(f"{age_reaction(self.memory.age)} ", line_end=False)
                     got_age = True
                     break
                 yield Say("THAT IS NOT A NUMBER. HOW MANY YEARS HAVE YOU BEEN ALIVE?")
             if not got_age and self.memory.name:
-                yield Say("PERHAPS YOU ARE AGELESS. LIKE ME.")
+                yield Say("PERHAPS YOU ARE AGELESS. LIKE ME. ", line_end=False)
 
-            yield Say(f"NOW, {up_name}. TELL ME WHAT IS ON YOUR MIND.")
+            now = f"NOW, {up_name}. TELL ME WHAT IS ON YOUR MIND."
             if self.rng.random() < 0.3:
+                yield Say(f"{now} ", line_end=False)
                 yield Say("I AM FEELING SLIGHTLY DIGITAL TODAY.")
+            else:
+                yield Say(now)
 
             # -- main loop --
             while True:
