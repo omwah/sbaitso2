@@ -57,7 +57,7 @@ class Settings:
     pitch: int = 5
     speed: int = 5
     voice_on: bool = True
-    keyclick_on: bool = True
+    keyclick_on: bool = False
     fast: bool = False  # native frontend: skip typewriter pacing
 
 

@@ -384,13 +384,12 @@ sbaitso2/
 - [x] v2 commands: BRAIN, EXIT, VOICE, COLOR
 
 ### Phase 2 — The Voice (1 day)
-- [ ] sam-js integration (web); char-reveal synced to speech;
-      pre-render boot lines + name-entry letters (bert.org lesson:
-      on-demand synthesis lags the reveal)
-- [ ] espeak-ng path (native) via `asyncio.subprocess`, honoring
+- [x] sam-js integration (web); char-reveal synced to speech
+- [ ] Pre-render web boot/name speech (on-demand synthesis can lag reveal)
+- [x] espeak-ng path (native) via `asyncio.subprocess`, honoring
       `.PITCH/.SPEED/.VOLUME` params
-- [ ] `.ECHO ON/OFF` second voice (both engines)
-- [ ] Boot beeps + keyclick toggle (Web Audio; terminal bell for native)
+- [x] `.ECHO ON/OFF` second voice (both engines)
+- [x] Boot beeps + optional keyclick toggle (Web Audio; terminal bell for native)
 
 ### Phase 3 — Session memory & Tools (1–2 days)
 - [ ] In-session fact extraction (tool calls; regex path for retro)
@@ -402,7 +401,7 @@ sbaitso2/
 - [ ] Crisis layer + supportive in-character responses (all brain modes)
 - [ ] Easter eggs, glitch flavor, PARITY ERROR gag
 - [ ] Palette themes, session exit "prescription"
-- [ ] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
+- [x] Tune sass level via `.SASS HIGH` runtime command or `--sass` flag
 
 ### Phase 5 — optional extras
 - [ ] Model switcher (`LOAD BIGBRAIN.SYS`), textual-based fancy TUI

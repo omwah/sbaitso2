@@ -13,6 +13,7 @@
       <div id="terminal"></div>
       <button id="controls-toggle" type="button" aria-controls="control-drawer" aria-expanded="false">CTRL</button>
       <aside id="control-drawer" hidden aria-hidden="true" aria-label="Terminal controls">
+        <button id="controls-close" type="button" aria-label="Close controls">X</button>
         <div class="control-title">SYSTEM CONTROLS</div>
         <div class="sound-control">
           <span>SOUND</span>
@@ -20,7 +21,7 @@
         </div>
         <div class="sound-control">
           <span>KEYCLICK</span>
-          <button id="keyclick-toggle" class="sound-toggle" type="button" role="switch" aria-checked="true" aria-label="Disable keyclick"><span class="toggle-knob"></span></button>
+          <button id="keyclick-toggle" class="sound-toggle" type="button" role="switch" aria-checked="false" aria-label="Enable keyclick"><span class="toggle-knob"></span></button>
         </div>
         <div class="voice-controls">
           <label for="tone-control">TONE <output id="tone-value">TREBLE</output></label>

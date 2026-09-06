@@ -179,7 +179,7 @@ class Renderer:
         self.espeak = EspeakVoice() if self.voice_on else None
         self.say_column = 0
         self.say_word = ""
-        self.keyclick_on = True
+        self.keyclick_on = False
 
     def click(self) -> None:
         if self.keyclick_on:
