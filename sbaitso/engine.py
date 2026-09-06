@@ -100,6 +100,7 @@ class Engine:
         self.retro = RetroEngine()
         self.commands = CommandVM(self)
         self.history: list[dict] = []
+        self.rolling_summary = ""
         self.topic: str | None = None
         self.quitting = False
         self.startup_error: str | None = None
@@ -438,7 +439,8 @@ class Engine:
             yield Say("...WHERE WAS I. YES. YOU WERE SAYING.")
 
         messages = assemble_messages(
-            self.memory, self.settings.sass, self.history, line, self.topic
+            self.memory, self.settings.sass, self.history, line, self.topic,
+            self.rolling_summary,
         )
         ctx = BrainContext(user_text=line, name=self.memory.name)
         parts: list[str] = []
@@ -449,6 +451,43 @@ class Engine:
         text = "\n".join(parts)
         self._record(line, text)
         self.memory.last_response = text
+        await self._enrich_session_memory(line, text)
+        await self._compress_history()
+
+    async def _enrich_session_memory(self, user_line: str, response: str) -> None:
+        """Use an available LLM to enrich regex memory; never blocks the reply."""
+        if isinstance(self.brain, RetroBrain) or self.brain.down:
+            return
+        prompt = (
+            'Return JSON only: {"facts":[{"key":"","value":""}],"topics":[]}. '
+            "Extract only durable user facts/topics from this turn; use empty arrays otherwise.\n"
+            f"USER: {user_line}\nDOCTOR: {response}"
+        )
+        try:
+            raw = "".join([d async for d in self.brain.stream(
+                [{"role": "system", "content": "Extract session memory."}, {"role": "user", "content": prompt}],
+                BrainContext(user_text="[memory extraction]", name=self.memory.name),
+            )]).strip()
+            self.memory.ingest_structured(json.loads(raw.removeprefix("```json").removesuffix("```").strip()))
+        except Exception:
+            pass
+
+    async def _compress_history(self) -> None:
+        """Replace old LLM history with a compact RAM-only summary."""
+        if len(self.history) <= 20 or isinstance(self.brain, RetroBrain) or self.brain.down:
+            return
+        chunk = self.history[:8]
+        transcript = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in chunk)
+        try:
+            summary = "".join([d async for d in self.brain.stream(
+                [{"role": "system", "content": "Summarize this session segment in one concise sentence."}, {"role": "user", "content": transcript}],
+                BrainContext(user_text="[history summary]", name=self.memory.name),
+            )]).strip()
+            if summary:
+                self.rolling_summary = (self.rolling_summary + " " + summary).strip()[-1200:]
+                self.history = self.history[8:]
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     async def _reply(self, messages: list[dict], ctx: BrainContext) -> AsyncIterator:

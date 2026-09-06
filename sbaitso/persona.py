@@ -44,7 +44,8 @@ _SASS = {
 
 
 def build_system_prompt(
-    memory: SessionMemory, sass: str = "NORMAL", topic: str | None = None
+    memory: SessionMemory, sass: str = "NORMAL", topic: str | None = None,
+    rolling_summary: str = "",
 ) -> str:
     parts = [_BASE_PROMPT]
     parts.append(_SASS.get(sass.upper(), _SASS["NORMAL"]) + "\n")
@@ -66,6 +67,8 @@ def build_system_prompt(
         parts.append("TOPICS TOUCHED THIS SESSION: " + ", ".join(memory.topics[-6:]) + ".\n")
     if topic:
         parts.append(f"THE USER WISHES TO FOCUS ON: {topic.upper()}. STEER BACK TO IT.\n")
+    if rolling_summary:
+        parts.append(f"EARLIER SESSION SUMMARY: {rolling_summary}\n")
 
     parts.append("REMEMBER: NOTHING IS SAVED TO DISK. THIS SESSION IS ALL THERE IS.")
     return "\n".join(parts)
@@ -77,9 +80,10 @@ def assemble_messages(
     history: list[dict],
     user_line: str,
     topic: str | None = None,
+    rolling_summary: str = "",
 ) -> list[dict]:
     messages: list[dict] = [
-        {"role": "system", "content": build_system_prompt(memory, sass, topic)}
+        {"role": "system", "content": build_system_prompt(memory, sass, topic, rolling_summary)}
     ]
     trimmed = history[-MAX_HISTORY:]
     messages.extend(trimmed)
