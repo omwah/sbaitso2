@@ -166,6 +166,7 @@ async def test_patient_llm_runs_an_autonomous_retro_doctor_session():
     retro = RetroBrain(Engine._shared_retro())
     autonomous = Engine([patient, retro], EngineArgs(brain="retro"))
     autonomous.history.append({"role": "user", "content": "I AM STRESSED ABOUT MY JOB."})
+    autonomous.topic = "WORK STRESS"
 
     ev = await events_of(autonomous, "PATIENT LLM 2")
     text = says_of(ev)
@@ -174,6 +175,7 @@ async def test_patient_llm_runs_an_autonomous_retro_doctor_session():
     assert sum(isinstance(event, Line) and event.text == "" for event in ev) == 4
     assert any("DEMONSTRATION COMPLETE" in line for line in text)
     assert "HUMAN: I AM STRESSED ABOUT MY JOB." in patient.messages[1]["content"]
+    assert "TOPIC: WORK STRESS" in patient.messages[1]["content"]
     assert isinstance(autonomous.brain, RetroBrain)
 
 
