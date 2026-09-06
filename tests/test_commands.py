@@ -118,6 +118,36 @@ async def test_brain_retro_switch_adds_retro_to_an_explicit_brain_session():
     assert "RETRO MODE ENGAGED" in " ".join(says_of(ev))
 
 
+async def test_patient_llm_runs_an_autonomous_retro_doctor_session():
+    from sbaitso.brains import Brain, BrainContext, RetroBrain
+    from sbaitso.engine import Engine, EngineArgs
+
+    class PatientBrain(Brain):
+        name = "TEST PATIENT LLM"
+        down = False
+
+        async def healthy(self):
+            return True
+
+        async def stream(self, messages, ctx):
+            self.messages = messages
+            yield "I AM WORRIED ABOUT MY WORK."
+
+    patient = PatientBrain()
+    retro = RetroBrain(Engine._shared_retro())
+    autonomous = Engine([patient, retro], EngineArgs(brain="retro"))
+    autonomous.history.append({"role": "user", "content": "I AM STRESSED ABOUT MY JOB."})
+
+    ev = await events_of(autonomous, "PATIENT LLM 2")
+    text = says_of(ev)
+    assert sum(line.startswith("PATIENT>") for line in text) == 2
+    assert sum(line.startswith("DR. SBAITSO>") for line in text) == 2
+    assert sum(isinstance(event, Line) and event.text == "" for event in ev) == 4
+    assert any("DEMONSTRATION COMPLETE" in line for line in text)
+    assert "HUMAN: I AM STRESSED ABOUT MY JOB." in patient.messages[1]["content"]
+    assert isinstance(autonomous.brain, RetroBrain)
+
+
 async def test_dir_command(engine):
     engine.memory.note_user("i am stressed about work")
     ev = await events_of(engine, "DIR")

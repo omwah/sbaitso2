@@ -18,6 +18,10 @@ def test_math_precedence():
     assert "8" in out
 
 
+def test_my_phrase_uses_a_single_response_tuple():
+    assert RetroEngine().respond("my work", "MIKE") == "TELL ME MORE ABOUT YOUR WORK, MIKE."
+
+
 def test_reflection():
     r = RetroEngine()
     out = r.respond("i feel sad today", "MIKE")
