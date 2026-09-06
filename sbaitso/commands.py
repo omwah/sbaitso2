@@ -59,7 +59,7 @@ HELP_PAGE_3 = [
 
 DOT_COMMANDS = (
     ".quit", ".tone", ".volume", ".pitch", ".speed",
-    ".param", ".echo", ".sass",
+    ".param", ".echo", ".sass", ".keyclick",
 )
 
 _PLAIN_COMMANDS = {
@@ -233,6 +233,17 @@ class CommandVM:
         if cmd == ".quit":
             self.engine.quitting = True
             yield Say(f"VERY WELL, {self.engine._name()}. INITIATING SIGN-OFF.")
+            return
+
+        if cmd == ".keyclick":
+            value = args[0].upper() if len(args) == 1 else ""
+            if value not in ("ON", "OFF"):
+                yield Say("KEYCLICK MUST BE ON OR OFF.")
+                return
+            settings.keyclick_on = value == "ON"
+            from .events import KeyclickMode
+            yield KeyclickMode(on=settings.keyclick_on)
+            yield Say(f"KEYCLICK {value}.")
             return
 
         if cmd == ".sass":

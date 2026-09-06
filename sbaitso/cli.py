@@ -25,7 +25,7 @@ except ImportError:  # pragma: no cover - windows
 
 from .engine import Engine, EngineArgs, Inputs
 from .events import (
-    Bell, Beep, Clear, Event, Line, Palette, Prompt, Quit, Say,
+    Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say,
     VoiceEnabled, VoiceParams,
 )
 from .voice import EspeakVoice, VoiceState, available
@@ -125,8 +125,9 @@ def raw_stdin():
 class KeyReader:
     """Read stdin char-by-char on the event loop; push lines to Inputs."""
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, inputs: Inputs) -> None:
+    def __init__(self, loop: asyncio.AbstractEventLoop, inputs: Inputs, click_fn=None) -> None:
         self.loop = loop
+        self.click_fn = click_fn
         self.inputs = inputs
         self.buf = ""
         self._fd = sys.stdin.fileno()
@@ -146,7 +147,9 @@ class KeyReader:
     def _on_readable(self) -> None:
         data = os.read(self._fd, 64).decode(errors="ignore")
         for ch in data:
-            if ch in ("\r", "\n"):
+            if self.click_fn and ch in ("\r", "\n", "\x7f", "\x08") or (self.click_fn and ch >= " "):
+                self.click_fn()
+            if ch in ("\r", "\n"): 
                 sys.stdout.write("\r\n")
                 sys.stdout.flush()
                 self.inputs.push(self.buf)
@@ -176,6 +179,12 @@ class Renderer:
         self.espeak = EspeakVoice() if self.voice_on else None
         self.say_column = 0
         self.say_word = ""
+        self.keyclick_on = True
+
+    def click(self) -> None:
+        if self.keyclick_on:
+            sys.stdout.write("\a")
+            sys.stdout.flush()
 
     def _ensure_response_indent(self, color: str) -> None:
         if self.say_column == 0:
@@ -251,6 +260,8 @@ class Renderer:
         elif isinstance(ev, (Beep, Bell)):
             sys.stdout.write("\a")
             sys.stdout.flush()
+        elif isinstance(ev, KeyclickMode):
+            self.keyclick_on = ev.on
         elif isinstance(ev, Palette):
             self.say_color = PALETTE_FG.get(ev.name, self.say_color)
             apply_native_palette(ev.name)
@@ -297,7 +308,7 @@ async def _run(args: argparse.Namespace) -> int:
 
     with raw_stdin() as is_tty:
         loop = asyncio.get_running_loop()
-        reader = KeyReader(loop, inputs)
+        reader = KeyReader(loop, inputs, renderer.click)
         reader.start()
         if not is_tty:
             _start_line_input(loop, inputs)

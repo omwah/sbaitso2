@@ -72,6 +72,12 @@ class Bell(Event):
 
 
 @dataclass
+class KeyclickMode(Event):
+    on: bool = True
+    delay_ms: int = 0
+
+
+@dataclass
 class Palette(Event):
     """Switch color theme: cga1|cga2|ega|vga|amber."""
 
