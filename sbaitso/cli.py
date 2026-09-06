@@ -170,6 +170,7 @@ def engine_args_from_namespace(args: argparse.Namespace) -> EngineArgs:
         palette=args.palette,
         allow_shell=args.doshell,
         fast=args.fast,
+        debug_llm=getattr(args, "debug_llm", False),
     )
 
 
@@ -245,6 +246,11 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--port", type=int, default=8000)
     native = sub.add_parser("run", help="run the native terminal frontend (default)")
     common(native)
+    native.add_argument(
+        "--debug-llm",
+        action="store_true",
+        help="print outbound Ollama/remote JSON messages (never headers or API keys)",
+    )
     return p
 
 
