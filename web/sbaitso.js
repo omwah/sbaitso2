@@ -149,8 +149,9 @@ async function handle(ev) {
     case "say": {
       if (ev.delay_ms) await sleep(ev.delay_ms);
       const echo = ev.voice === "echo";
-      const duration = speak(ev.text, echo);
-      await typeOut(ev.text, ev.reveal, echo, duration);
+      const spokenText = ev.speech_text || ev.text;
+      const duration = ev.partial ? 0 : speak(spokenText, echo);
+      await typeOut(ev.text, ev.reveal, echo, duration, ev.partial);
       break;
     }
     case "beep":
@@ -206,13 +207,14 @@ async function handle(ev) {
   }
 }
 
-async function typeOut(text, reveal, echoVoice, spokenSec) {
+async function typeOut(text, reveal, echoVoice, spokenSec, partial = false) {
   const color = echoVoice ? COLORS.dim : sayColor;
   term.write(color);
+  let perChar = 14;
   if (reveal) {
-    // pace the reveal to the speech, clamped to sane typewriter speeds
-    let perChar = 14;
-    if (spokenSec > 0 && text.length > 0) {
+    // Complete sentences pace to speech. Streamed partial text remains brisk
+    // so the user sees model progress instead of waiting for a period.
+    if (!partial && spokenSec > 0 && text.length > 0) {
       perChar = Math.min(45, Math.max(6, (spokenSec * 1000) / text.length));
     }
     for (const ch of text) {
@@ -222,9 +224,10 @@ async function typeOut(text, reveal, echoVoice, spokenSec) {
   } else {
     term.write(text);
   }
-  term.write(RESET + "\r\n");
-  // let longer utterances finish before the next line starts
-  if (spokenSec > 0) {
+  term.write(RESET);
+  if (!partial) term.write("\r\n");
+  // Let longer utterances finish before the next line starts.
+  if (!partial && spokenSec > 0) {
     const typed = (reveal ? perChar * text.length : 0) / 1000;
     if (spokenSec > typed) await sleep((spokenSec - typed) * 1000);
   }
