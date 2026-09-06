@@ -28,6 +28,7 @@ from .events import (
     Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say,
     VoiceEnabled, VoiceParams,
 )
+from .persona_loader import persona_names
 from .voice import EspeakVoice, VoiceState, available
 
 ANSI = {
@@ -364,9 +365,9 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--remote-model", default=None)
         sp.add_argument("--remote-key", default=None)
         sp.add_argument(
-            "--persona", type=str.lower, choices=["sbaitso", "gentle", "sardonic"],
+            "--persona", type=str.lower, choices=persona_names(),
             default="sbaitso", metavar="PERSONA",
-            help="bundled persona: sbaitso, gentle, sardonic (default: sbaitso)",
+            help="bundled persona: " + ", ".join(persona_names()) + " (default: sbaitso)",
         )
         sp.add_argument("--sass", choices=["LOW", "NORMAL", "HIGH"], default="NORMAL")
         sp.add_argument("--color", choices=list(PALETTE_FG), default="vga")
