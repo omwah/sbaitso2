@@ -8,11 +8,18 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import concurrent.futures
 import os
 import sys
-import termios
-import tty
 from contextlib import contextmanager
+
+try:  # POSIX only; Windows falls back to line input
+    import termios
+    import tty
+
+    HAVE_TERMIOS = True
+except ImportError:  # pragma: no cover - windows
+    HAVE_TERMIOS = False
 
 from .engine import Engine, EngineArgs, Inputs
 from .events import (
@@ -41,7 +48,7 @@ PALETTE_FG = {
 
 @contextmanager
 def raw_stdin():
-    if not sys.stdin.isatty():
+    if not HAVE_TERMIOS or not sys.stdin.isatty():
         yield False
         return
     fd = sys.stdin.fileno()
@@ -161,7 +168,7 @@ async def _run(args: argparse.Namespace) -> None:
         reader = KeyReader(loop, inputs)
         reader.start()
         if not is_tty:
-            _start_piped_input(loop, inputs)
+            _start_line_input(loop, inputs)
         try:
             async for ev in engine.run(inputs):
                 await renderer.render(ev)
@@ -176,13 +183,24 @@ async def _run(args: argparse.Namespace) -> None:
             print(RESET, end="")
 
 
-def _start_piped_input(loop: asyncio.AbstractEventLoop, inputs: Inputs) -> None:
-    async def pump() -> None:
+def _start_line_input(loop: asyncio.AbstractEventLoop, inputs: Inputs) -> None:
+    """Line-mode input for non-tty stdin (pipes) and platforms without
+    termios (Windows). Runs in a worker thread so the event loop stays live.
+    EOF closes the session."""
+
+    _background: set = set()
+
+    async def wrapper() -> None:
+        await loop.run_in_executor(None, _pump_sync, inputs)
+
+    def _pump_sync(inputs: Inputs) -> None:
         for line in sys.stdin:
             inputs.push(line.rstrip("\n"))
         inputs.close()
 
-    loop.create_task(pump())
+    task = loop.create_task(wrapper())
+    _background.add(task)
+    task.add_done_callback(_background.discard)
 
 
 def build_parser() -> argparse.ArgumentParser:
