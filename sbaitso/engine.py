@@ -74,6 +74,8 @@ class EngineArgs:
     palette: str = "cga1"
     fast: bool = False
     debug_llm: bool = False
+    # Internal switch: deliberately not exposed through CLI or REPL commands.
+    strip_response_boundary_whitespace: bool = True
     patient_llm_max_turns: int = 256
 
 
@@ -454,6 +456,23 @@ class Engine:
             buf = ""  # complete, unfinished sentence; retained for final TTS
             flushed = 0  # characters already displayed from ``buf``
             got_any = False
+            display_ends_with_space = False
+
+            def normalize_display(text: str) -> str:
+                """Collapse model whitespace without joining words across chunks."""
+                nonlocal display_ends_with_space
+                if not self.args.strip_response_boundary_whitespace:
+                    return text
+                text = re.sub(r"\s+", " ", text)
+                if display_ends_with_space:
+                    text = text.lstrip()
+                return text
+
+            def note_displayed(text: str) -> None:
+                nonlocal display_ends_with_space
+                if text:
+                    display_ends_with_space = text[-1].isspace()
+
             try:
                 if self.args.debug_llm:
                     payload = await brain.request_payload(messages)
@@ -493,17 +512,20 @@ class Engine:
                         )
                         if full_sentence:
                             got_any = True
+                            displayed = normalize_display(display_text.upper())
                             if flushed:
-                                yield Say(
-                                    display_text.upper(),
-                                    line_end=not streaming,
-                                    speech_text=full_sentence,
-                                )
+                                if displayed:
+                                    yield Say(
+                                        displayed,
+                                        line_end=not streaming,
+                                        speech_text=full_sentence,
+                                    )
+                                    note_displayed(displayed)
                             else:
-                                yield Say(
-                                    display_text.upper() if streaming else full_sentence,
-                                    line_end=not streaming,
-                                )
+                                output = displayed if streaming else normalize_display(full_sentence)
+                                if output:
+                                    yield Say(output, line_end=not streaming)
+                                    note_displayed(output)
                         buf = buf[match.end():]
                         flushed = 0
 
@@ -515,22 +537,30 @@ class Engine:
                         cut = cut + 1 if cut > flushed else limit
                         chunk = buf[flushed:cut]
                         if chunk:
-                            got_any = True
-                            yield Say(chunk.upper(), partial=True, line_end=False)
+                            displayed = normalize_display(chunk.upper())
+                            if displayed:
+                                got_any = True
+                                yield Say(displayed, partial=True, line_end=False)
+                                note_displayed(displayed)
                             flushed = cut
 
                 if buf.strip():
-                    remaining = buf[flushed:].rstrip().upper()
+                    remaining = normalize_display(buf[flushed:].rstrip().upper())
                     full_sentence = buf.strip().upper()
                     got_any = True
                     if flushed:
-                        yield Say(
-                            remaining,
-                            line_end=not streaming,
-                            speech_text=full_sentence,
-                        )
+                        if remaining:
+                            yield Say(
+                                remaining,
+                                line_end=not streaming,
+                                speech_text=full_sentence,
+                            )
+                            note_displayed(remaining)
                     else:
-                        yield Say(full_sentence, line_end=not streaming)
+                        output = normalize_display(full_sentence)
+                        if output:
+                            yield Say(output, line_end=not streaming)
+                            note_displayed(output)
                 if streaming and got_any:
                     # Every streamed chunk shares a line; close it once the
                     # response has finished.
