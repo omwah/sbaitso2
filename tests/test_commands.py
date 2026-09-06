@@ -121,7 +121,7 @@ async def test_brain_retro_switch_adds_retro_to_an_explicit_brain_session():
 async def test_patient_llm_turn_limit_comes_from_engine_configuration():
     from sbaitso.engine import Engine, EngineArgs
 
-    assert EngineArgs().patient_llm_max_turns == 3256
+    assert EngineArgs().patient_llm_max_turns == 256
     configured = Engine.from_args(EngineArgs(brain="retro", patient_llm_max_turns=2))
     ev = await events_of(configured, "PATIENT LLM 3")
     assert "1 TO 2" in " ".join(says_of(ev))

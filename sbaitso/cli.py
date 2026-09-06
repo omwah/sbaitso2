@@ -295,8 +295,8 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--fast", action="store_true", help="skip typewriter pacing")
         sp.add_argument("--novoice", action="store_true", help="disable espeak-ng voice (if installed)")
         sp.add_argument(
-            "--patient-llm-max-turns", type=int, default=3256,
-            help="maximum turns accepted by PATIENT LLM (default: 3256)",
+            "--patient-llm-max-turns", type=int, default=256,
+            help="maximum turns accepted by PATIENT LLM (default: 256)",
         )
 
     serve = sub.add_parser("serve", help="run the web frontend")
