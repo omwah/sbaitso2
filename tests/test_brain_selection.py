@@ -77,6 +77,7 @@ async def test_debug_llm_emits_outbound_payload_without_headers(
 @pytest.mark.asyncio
 async def test_llm_deltas_render_partially_then_speak_complete_sentence():
     engine = Engine.from_args(EngineArgs(brain="ollama", model="stream-test"))
+    engine.rng.seed(0)  # avoid the intentional 2% glitch interjection
     engine.memory.name = "MIKE"
 
     async def reply(messages, context):

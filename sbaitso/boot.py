@@ -22,7 +22,6 @@ def banner_events(neural_link: str) -> list:
         Line(" Expanding EMPATHY.SYS ............... OK", delay_ms=d),
         Line(f" Probing NEURAL LINK ................. {neural_link}", delay_ms=d),
         Line(" Memory: 640K  (SHOULD BE ENOUGH FOR ANYBODY)", delay_ms=d),
-        Line(" Storage: NONE.  (AS PROMISED. AS DESIGNED.)", color="yellow", delay_ms=250),
         Line("", delay_ms=200),
     ]
 
