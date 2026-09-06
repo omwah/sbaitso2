@@ -306,7 +306,7 @@ class RetroEngine:
             return self._reply(("IS THAT THE REAL REASON, {N}? THINK CAREFULLY."), n, previous or "")
         m = _match(r"my (.+)", low)
         if m and len(m.split()) <= 4:
-            return self._reply((f"TELL ME MORE ABOUT YOUR {m.upper()}, {{N}}."), n, previous or "")
+            return self._reply((f"TELL ME MORE ABOUT YOUR {m.upper()}, {{N}}.",), n, previous or "")
         if low.endswith("?"):
             return self._reply(_QUESTION, n, previous or "")
         if "work" in low or "job" in low:

@@ -51,6 +51,7 @@ HELP_PAGE_3 = [
     " BRAIN            SHOW MY ACTIVE BRAIN",
     " BRAIN SCAN       RE-PROBE FOR A BETTER BRAIN",
     " BRAIN RETRO      SWITCH TO 1991 RETRO MODE",
+    " PATIENT LLM [N]  AUTONOMOUS LLM-PATIENT / RETRO-DOCTOR SESSION",
     " DIR              LIST WHAT I KNOW (RAM ONLY)",
     " TYPE <FILE>      PRINT MEMORY.DAT OR JOURNAL FILES",
     " MOOD             MOOD LOG AND TREND FOR THIS SESSION",
@@ -74,7 +75,7 @@ _PLAIN_COMMANDS = {
 }
 
 _PREFIX_COMMANDS = (
-    "SAY ", "TYPE ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN",
+    "SAY ", "TYPE ", "COLOR ", "TOPIC ", "MATH ", "BRAIN SCAN", "PATIENT LLM",
     "DOSSHELL ", ".READ ", "VOICE ",
 )
 
@@ -151,6 +152,11 @@ class CommandVM:
 
         if up.startswith("BRAIN SCAN"):
             async for ev in self._brain_scan():
+                yield ev
+            return
+
+        if up.startswith("PATIENT LLM"):
+            async for ev in self._patient_llm(s[len("PATIENT LLM"):].strip()):
                 yield ev
             return
 
@@ -348,6 +354,21 @@ class CommandVM:
                 yield Line(text)
             return
         yield Say("TYPE WORKS ON: MEMORY.DAT, MOOD.LOG, JOURNAL.")
+
+    async def _patient_llm(self, argument: str) -> AsyncIterator:
+        if not argument:
+            turns = 6
+        else:
+            try:
+                turns = int(argument)
+            except ValueError:
+                yield Say("USAGE: PATIENT LLM [1 TO 12 TURNS].")
+                return
+        if not 1 <= turns <= 12:
+            yield Say("PATIENT LLM ACCEPTS 1 TO 12 TURNS.")
+            return
+        async for ev in self.engine.autonomous_patient_session(turns):
+            yield ev
 
     async def _brain_scan(self) -> AsyncIterator:
         yield Say("SCANNING FOR BRAINS...")
