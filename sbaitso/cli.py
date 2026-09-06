@@ -37,6 +37,7 @@ ANSI = {
     "dim": "\x1b[90m",
 }
 RESET = "\x1b[0m"
+SAY_WRAP_WIDTH = 72
 
 PALETTE_FG = {
     "cga1": ANSI["cyan"],
@@ -113,12 +114,32 @@ class Renderer:
         self.voice_on = voice and available()
         self.voice_state = VoiceState()
         self.espeak = EspeakVoice() if self.voice_on else None
+        self.say_column = 0
+
+    async def _write_say_text(self, text: str, color: str, reveal: bool) -> None:
+        """Write streamed text at a stable, DOS-like response width."""
+        for ch in text:
+            if ch == "\n":
+                sys.stdout.write("\n")
+                self.say_column = 0
+                continue
+            if self.say_column >= SAY_WRAP_WIDTH:
+                sys.stdout.write("\n")
+                self.say_column = 0
+                if ch == " ":
+                    continue
+            sys.stdout.write(f"{color}{ch}{RESET}")
+            self.say_column += 1
+            if reveal and not self.fast:
+                sys.stdout.flush()
+                await asyncio.sleep(0.012)
 
     async def render(self, ev: Event) -> None:
         if isinstance(ev, Line):
             if ev.delay_ms:
                 await asyncio.sleep(ev.delay_ms / 1000)
             print(f"{ANSI.get(ev.color, '')}{ev.text}{RESET}")
+            self.say_column = 0
         elif isinstance(ev, Say):
             if ev.delay_ms:
                 await asyncio.sleep(ev.delay_ms / 1000)
@@ -129,17 +150,10 @@ class Renderer:
                 speech = await self.espeak.speak(
                     spoken_text, self.voice_state, echo=ev.voice == "echo"
                 )
-            if ev.reveal and not self.fast:
-                for ch in ev.text:
-                    sys.stdout.write(f"{color}{ch}{RESET}")
-                    sys.stdout.flush()
-                    await asyncio.sleep(0.012)
-                if ev.line_end:
-                    sys.stdout.write("\n")
-            elif ev.line_end:
-                print(ev.text if not ev.reveal else f"{color}{ev.text}{RESET}")
-            else:
-                sys.stdout.write(f"{color}{ev.text}{RESET}")
+            await self._write_say_text(ev.text, color, ev.reveal)
+            if ev.line_end:
+                sys.stdout.write("\n")
+                self.say_column = 0
             sys.stdout.flush()
             if speech:
                 await speech
@@ -149,12 +163,15 @@ class Renderer:
         elif isinstance(ev, Palette):
             self.say_color = PALETTE_FG.get(ev.name, self.say_color)
             print(f"{ANSI['yellow']}PALETTE: {ev.name.upper()}{RESET}")
+            self.say_column = 0
         elif isinstance(ev, Clear):
             sys.stdout.write("\x1b[2J\x1b[H")
+            self.say_column = 0
             sys.stdout.flush()
         elif isinstance(ev, Prompt):
             label = (ev.label or "YOU").upper()
             print(f"{ANSI['dim']}{label}> {RESET}", end="", flush=True)
+            self.say_column = 0
         elif isinstance(ev, (VoiceParams, VoiceEnabled)):
             self.voice_state.update(ev)
         elif isinstance(ev, Quit):

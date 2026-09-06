@@ -367,18 +367,28 @@ class Engine:
                     buf += delta
                     while (match := _SENTENCE_END.search(buf)) is not None:
                         raw_sentence = buf[: match.end()]
-                        remaining = raw_sentence[flushed:].strip()
                         full_sentence = raw_sentence.strip().upper()
+                        # Sentence detection consumes its following space.
+                        # Keep it in continuous streamed output so the next
+                        # sentence cannot become ``PERIOD.NEXT``.
+                        remaining = raw_sentence[flushed:]
+                        display_text = (
+                            remaining.replace("\n", " ")
+                            if streaming else remaining.strip()
+                        )
                         if full_sentence:
                             got_any = True
                             if flushed:
                                 yield Say(
-                                    remaining.upper(),
+                                    display_text.upper(),
                                     line_end=not streaming,
                                     speech_text=full_sentence,
                                 )
                             else:
-                                yield Say(full_sentence, line_end=not streaming)
+                                yield Say(
+                                    display_text.upper() if streaming else full_sentence,
+                                    line_end=not streaming,
+                                )
                         buf = buf[match.end():]
                         flushed = 0
 
@@ -395,7 +405,7 @@ class Engine:
                             flushed = cut
 
                 if buf.strip():
-                    remaining = buf[flushed:].strip().upper()
+                    remaining = buf[flushed:].rstrip().upper()
                     full_sentence = buf.strip().upper()
                     got_any = True
                     if flushed:

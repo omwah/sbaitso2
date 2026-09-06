@@ -99,3 +99,22 @@ async def test_llm_deltas_render_partially_then_speak_complete_sentence():
     final = content_says[-1]
     assert final.partial is False
     assert final.speech_text == "THIS IS A STREAMED RESPONSE THAT ARRIVES IN PIECES."
+
+
+@pytest.mark.asyncio
+async def test_streaming_preserves_space_after_a_completed_sentence():
+    engine = Engine.from_args(EngineArgs(brain="ollama", model="stream-test"))
+    engine.rng.seed(0)
+    engine.memory.name = "MIKE"
+
+    async def reply(messages, context):
+        yield "A COMPLETE FIRST SENTENCE. "
+        yield "A SECOND SENTENCE."
+
+    engine.brains[0].stream = reply
+    events = [event async for event in engine.handle("SHOW ME SPACING.")]
+    displayed = "".join(
+        event.text for event in events if isinstance(event, Say) and event.text
+    )
+
+    assert "SENTENCE. A SECOND" in displayed
