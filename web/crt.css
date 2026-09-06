@@ -32,7 +32,8 @@ html, body {
 #terminal {
   width: 100%;
   height: 100%;
-  padding: 16px 40px 32px 18px;
+  /* Left text starts after the one-character response/banner gutter. */
+  padding: 16px calc(18px + 1ch) 32px 18px;
   box-sizing: border-box;
 }
 
