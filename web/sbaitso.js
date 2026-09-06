@@ -25,6 +25,7 @@ const COLORS = {
 };
 const RESET = "\x1b[0m";
 const RESPONSE_INDENT = " ";  // match the boot banner's one-character gutter
+const RESPONSE_RIGHT_GUTTER_COLUMNS = 3;
 let sayColumn = 0;
 let sayWord = "";
 
@@ -249,7 +250,8 @@ async function writeSayChar(ch, reveal, perChar) {
 
 function currentWrapWidth() {
   // FitAddon recalculates this from the usable viewport on every resize.
-  return Math.max(1, term.cols || 72);
+  // Keep a matching visible gutter at the right edge of response text.
+  return Math.max(1, (term.cols || 72) - RESPONSE_RIGHT_GUTTER_COLUMNS);
 }
 
 async function flushSayWord(reveal, perChar) {
