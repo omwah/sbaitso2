@@ -66,6 +66,71 @@ let dead = false;
 /* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
 const SAM_RATE = 22050;
 const voice = { on: true, tone: 1, volume: 5, pitch: 5, speed: 5 };
+const controlsToggle = document.getElementById("controls-toggle");
+const controlDrawer = document.getElementById("control-drawer");
+const voiceToggle = document.getElementById("voice-toggle");
+const voiceControls = {
+  tone: document.getElementById("tone-control"),
+  volume: document.getElementById("volume-control"),
+  pitch: document.getElementById("pitch-control"),
+  speed: document.getElementById("speed-control"),
+};
+const voiceValues = {
+  tone: document.getElementById("tone-value"),
+  volume: document.getElementById("volume-value"),
+  pitch: document.getElementById("pitch-value"),
+  speed: document.getElementById("speed-value"),
+};
+function setControlsOpen(open) {
+  controlDrawer.hidden = !open;
+  controlDrawer.classList.toggle("open", open);
+  controlDrawer.setAttribute("aria-hidden", String(!open));
+  controlsToggle.setAttribute("aria-expanded", String(open));
+  if (!open) term.focus();
+}
+
+controlsToggle.addEventListener("click", () => {
+  setControlsOpen(controlDrawer.hidden);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && controlDrawer.classList.contains("open")) {
+    event.preventDefault();
+    setControlsOpen(false);
+  }
+});
+
+function syncVoiceToggle() {
+  voiceToggle.setAttribute("aria-checked", String(voice.on));
+  voiceToggle.setAttribute(
+    "aria-label", voice.on ? "Disable speech synthesis" : "Enable speech synthesis"
+  );
+}
+
+voiceToggle.addEventListener("click", () => {
+  voice.on = !voice.on;
+  if (!voice.on) stopActiveSpeech();
+  syncVoiceToggle();
+  setControlsOpen(false);
+});
+
+function syncVoiceControls() {
+  for (const [name, control] of Object.entries(voiceControls)) {
+    control.value = voice[name];
+    voiceValues[name].textContent = name === "tone"
+      ? (voice.tone === 0 ? "BASS" : "TREBLE")
+      : voice[name];
+  }
+}
+
+for (const [name, control] of Object.entries(voiceControls)) {
+  control.addEventListener("input", () => {
+    voice[name] = Number(control.value);
+    syncVoiceControls();
+  });
+}
+
+syncVoiceControls();
 
 function samParams(echo) {
   // .PITCH 0-9 -> sam pitch ~20..100 (default 5 ~= 65, close to S.A.M.'s 64)
@@ -84,6 +149,15 @@ function samParams(echo) {
 }
 
 let audioCtx = null;
+const activeSpeech = new Set();
+
+function stopActiveSpeech() {
+  for (const source of activeSpeech) {
+    try { source.stop(); } catch (e) {}
+  }
+  activeSpeech.clear();
+}
+
 function getAudioCtx() {
   if (!audioCtx) {
     try {
@@ -133,6 +207,8 @@ function speak(text, echo) {
     const gain = ctx.createGain();
     gain.gain.value = Math.min(1.0, (voice.volume / 9) * 0.9);
     src.connect(gain); gain.connect(ctx.destination);
+    src.onended = () => activeSpeech.delete(src);
+    activeSpeech.add(src);
     src.start();
     return f32.length / SAM_RATE;
   } catch (e) { return 0; }
@@ -210,9 +286,12 @@ async function handle(ev) {
       if (ev.volume !== null && ev.volume !== undefined) voice.volume = ev.volume;
       if (ev.pitch !== null && ev.pitch !== undefined) voice.pitch = ev.pitch;
       if (ev.speed !== null && ev.speed !== undefined) voice.speed = ev.speed;
+      syncVoiceControls();
       break;
     case "voiceenabled":
       voice.on = ev.on;
+      if (!voice.on) stopActiveSpeech();
+      syncVoiceToggle();
       break;
     case "echomode":
       break;
