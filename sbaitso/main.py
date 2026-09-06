@@ -20,6 +20,12 @@ from .events import Quit
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
 app = FastAPI(title="DR. SBAITSO/2", docs_url=None, redoc_url=None)
+app.state.engine_args = EngineArgs(brain="auto", allow_shell=False)
+
+
+def configure(engine_args: EngineArgs) -> None:
+    """Set process-wide defaults for new web sessions before uvicorn starts."""
+    app.state.engine_args = engine_args
 
 app.mount("/assets", StaticFiles(directory=WEB_DIR), name="assets")
 
@@ -38,7 +44,7 @@ async def healthz() -> dict:
 async def ws(websocket: WebSocket) -> None:
     await websocket.accept()
     inputs = Inputs()
-    engine = Engine.from_args(EngineArgs(brain="auto", allow_shell=False))
+    engine = Engine.from_args(websocket.app.state.engine_args)
 
     async def sender() -> None:
         try:

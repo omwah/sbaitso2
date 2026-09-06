@@ -114,6 +114,7 @@ class EchoMode(Event):
 
 @dataclass
 class Quit(Event):
-    """Session over."""
+    """Session over; error=True denotes an unrecoverable startup failure."""
 
+    error: bool = False
     delay_ms: int = 0

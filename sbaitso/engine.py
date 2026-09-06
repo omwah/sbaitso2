@@ -92,6 +92,7 @@ class Engine:
         self.history: list[dict] = []
         self.topic: str | None = None
         self.quitting = False
+        self.startup_error: str | None = None
         self.swears = 0
         self.rng = random.Random()
 
@@ -100,18 +101,19 @@ class Engine:
     # ------------------------------------------------------------------
     @classmethod
     def from_args(cls, args: EngineArgs) -> "Engine":
-        brains: list[Brain] = []
-        if args.brain != "retro":
-            brains.append(OllamaBrain(OllamaClient(args.ollama_url, args.model)))
-            remote = RemoteClient(args.remote_key, args.remote_url, args.remote_model)
-            if remote.configured or args.brain == "remote":
-                brains.append(RemoteBrain(remote))
-        brains.append(RetroBrain(cls._shared_retro()))
-        if args.brain == "ollama":
-            brains = [brains[0], brains[-1]]
+        if args.brain == "retro":
+            brains: list[Brain] = [RetroBrain(cls._shared_retro())]
+        elif args.brain == "ollama":
+            brains = [OllamaBrain(OllamaClient(args.ollama_url, args.model))]
         elif args.brain == "remote":
-            brains = [b for b in brains if isinstance(b, RemoteBrain)] or [brains[-1]]
-            brains = brains + [RetroBrain(cls._shared_retro())]
+            remote = RemoteClient(args.remote_key, args.remote_url, args.remote_model)
+            brains = [RemoteBrain(remote)]
+        else:  # auto: the only mode with the full fallback ladder
+            remote = RemoteClient(args.remote_key, args.remote_url, args.remote_model)
+            brains = [OllamaBrain(OllamaClient(args.ollama_url, args.model))]
+            if remote.configured:
+                brains.append(RemoteBrain(remote))
+            brains.append(RetroBrain(cls._shared_retro()))
         return cls(brains, args)
 
     _retro_instance: RetroEngine | None = None
@@ -142,11 +144,11 @@ class Engine:
                 delay_ms=120,
             )
 
-    def select_best_brain(self) -> Brain:
+    def select_best_brain(self) -> Brain | None:
         for brain in self.brains:
             if not brain.down:
                 return brain
-        return self.brains[-1]
+        return None
 
     def reset_brain_flags(self) -> None:
         for brain in self.brains:
@@ -166,6 +168,9 @@ class Engine:
     async def run(self, inputs: Inputs) -> AsyncIterator:
         async for ev in self._boot():
             yield ev
+        if self.startup_error:
+            yield Quit(error=True)
+            return
 
         # -- intake: name, then age (asked every run; nothing persists) --
         name: str | None = None
@@ -235,6 +240,15 @@ class Engine:
         async for ev in self.probe_boot():
             probe.append(ev)
         self.brain = self.select_best_brain()
+        if self.brain is None:
+            requested = self.args.brain.upper()
+            self.startup_error = (
+                f"ERROR: REQUESTED {requested} BRAIN IS NOT AVAILABLE. "
+                "START WITH --BRAIN AUTO TO ALLOW RETRO FALLBACK."
+            )
+            yield Line(f" {self.startup_error}", color="red")
+            return
+
         retro_mode = isinstance(self.brain, RetroBrain)
         for ev in banner_events("NOT FOUND -> RETRO MODE" if retro_mode else "OK"):
             yield ev

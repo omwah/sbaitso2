@@ -190,9 +190,15 @@ async function handle(ev) {
     case "quit":
       inputEnabled = false;
       dead = true;
-      term.write("\r\n" + COLORS.yellow +
-        " SESSION ENDED. AS PROMISED, I REMEMBER NOTHING.\r\n" +
-        " REFRESH THE PAGE TO BEGIN ANEW.\r\n" + RESET);
+      if (ev.error) {
+        term.write("\r\n" + COLORS.red +
+          " STARTUP FAILED. THE REQUESTED BRAIN IS UNAVAILABLE.\r\n" +
+          " REFRESH AFTER CORRECTING THE BRAIN CONFIGURATION.\r\n" + RESET);
+      } else {
+        term.write("\r\n" + COLORS.yellow +
+          " SESSION ENDED. AS PROMISED, I REMEMBER NOTHING.\r\n" +
+          " REFRESH THE PAGE TO BEGIN ANEW.\r\n" + RESET);
+      }
       try { ws.close(); } catch (e) {}
       break;
     default:

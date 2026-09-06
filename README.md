@@ -32,8 +32,10 @@ through: `pixi run serve --port 8321`.
     I AM ONLY AS SMART AS I WAS THEN. BE PATIENT WITH ME.
    ```
 
-Useful flags: `--brain retro|ollama|remote|auto`, `--model NAME`,
+Useful flags: `--brain auto|retro|ollama|remote`, `--model NAME`,
 `--sass LOW|NORMAL|HIGH`, `--palette CGA1|CGA2|EGA|VGA|AMBER`, `--doshell`.
+Only `--brain auto` uses the fallback ladder; an explicitly requested
+`ollama` or `remote` brain exits with an error if it cannot be reached.
 
 ## Commands
 
