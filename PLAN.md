@@ -343,7 +343,7 @@ Consequences, all of them good:
 | Web frontend | xterm.js + sam-js + Web Audio, vanilla JS | authentic, zero-build, voice stays client-side |
 | Persistence | **None — by design.** Session state is dataclasses in RAM | privacy by architecture; honors "MEMORY WIPED AFTER YOU LEAVE"; one less subsystem to build/secure |
 | Config | CLI flags (`argparse`) + env vars (`SBAITSO_REMOTE_KEY`, `SBAITSO_MODEL`) | nothing written to disk; 12-factor style |
-| Packaging | `uv` (or plain venv) + `pyproject.toml`; `sbaitso` console script + `sbaitso serve` | one install, two frontends |
+| Packaging | pixi + `pyproject.toml` (`[tool.pixi]` workspace; conda-forge python, pypi deps); `sbaitso` console script + `pixi run serve` | one env, two frontends, cross-platform (linux/macOS/windows) |
 | Testing | pytest + `respx` (mock Ollama HTTP) | persona/crisis/failover tests are real tests |
 
 Directory sketch:

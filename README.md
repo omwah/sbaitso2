@@ -8,14 +8,16 @@ brain (local LLM), a 1991 fallback brain, session memory, and **zero
 persistence**: memory is rich within a session and wiped when you leave,
 exactly as the original promised.
 
-## Quickstart (with [uv](https://docs.astral.sh/uv/))
+## Quickstart (with [pixi](https://pixi.sh))
 
 ```sh
-uv run sbaitso            # native terminal frontend
-uv run sbaitso serve      # web frontend at http://127.0.0.1:8000
+pixi run sbaitso            # native terminal frontend
+pixi run serve              # web frontend at http://127.0.0.1:8000
+pixi run test               # run the test suite
 ```
 
-Both frontends share one core and behave identically.
+Both frontends share one core and behave identically. Task args pass
+through: `pixi run serve --port 8321`.
 
 ## The brain ladder
 
@@ -48,8 +50,8 @@ Try `SAY PARITY` for an authentic crash.
 ## Development
 
 ```sh
-uv sync                      # install deps (dev group included)
-uv run pytest -q             # run tests (offline; Ollama probing is redirected)
+pixi install               # create .pixi env (conda-forge python + pypi deps)
+pixi run test              # run tests (offline; Ollama probing is redirected)
 ```
 
 ## Status

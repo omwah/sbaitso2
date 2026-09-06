@@ -8,7 +8,10 @@ __pycache__/
 venv/
 dist/
 *.egg-info/
-.uv-cache/
+
+# pixi
+.pixi/
+.pixi-envs/
 
 # Tooling
 .pytest_cache/

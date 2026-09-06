@@ -15,13 +15,35 @@ dependencies = [
 [project.scripts]
 sbaitso = "sbaitso.cli:main"
 
-[dependency-groups]
-dev = [
-    "pytest>=8",
-    "pytest-asyncio>=0.23",
-    "pytest-timeout>=2.4.0",
-]
+# ---------------------------------------------------------------- pixi
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
+[tool.pixi.dependencies]
+python = ">=3.12"
+
+[tool.pixi.pypi-dependencies]
+sbaitso2 = { path = ".", editable = true }
+fastapi = ">=0.115"
+uvicorn = ">=0.30"
+httpx = ">=0.27"
+rich = ">=13.7"
+websockets = ">=17.1"
+
+[tool.pixi.feature.dev.pypi-dependencies]
+pytest = ">=8"
+pytest-asyncio = ">=0.23"
+pytest-timeout = ">=2.4"
+
+[tool.pixi.environments]
+default = { features = ["dev"], solve-group = "default" }
+
+[tool.pixi.tasks]
+serve = "sbaitso serve"
+test = "pytest -q"
+
+# ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
