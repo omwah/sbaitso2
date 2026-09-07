@@ -103,6 +103,8 @@ class Engine:
         self.commands = CommandVM(self)
         self.history: list[dict] = []
         self.rolling_summary = ""
+        self._maintenance_tasks: set[asyncio.Task] = set()
+        self._maintenance_lock = asyncio.Lock()
         from .persona import _BASE_PROMPT
         from .persona_loader import load_persona
         loaded_persona = load_persona(args.persona) or load_persona("sbaitso")
@@ -353,6 +355,7 @@ class Engine:
                 if self.quitting:
                     break
 
+        self._cancel_maintenance()
         for ev in self._prescription():
             yield ev
         yield Quit()
@@ -437,6 +440,7 @@ class Engine:
 
         # conversation
         self.memory.note_user(line)
+        self._cancel_maintenance()
 
         if is_crisis(low):
             resp = crisis_response(self._name())
@@ -472,8 +476,23 @@ class Engine:
         text = "\n".join(parts)
         self._record(line, text)
         self.memory.last_response = text
-        await self._enrich_session_memory(line, text)
-        await self._compress_history()
+        self._schedule_maintenance(line, text)
+
+    def _schedule_maintenance(self, user_line: str, response: str) -> None:
+        """Keep RAM-only upkeep off the reply/prompt path."""
+        async def maintain() -> None:
+            async with self._maintenance_lock:
+                await self._enrich_session_memory(user_line, response)
+                await self._compress_history()
+
+        task = asyncio.create_task(maintain())
+        self._maintenance_tasks.add(task)
+        task.add_done_callback(self._maintenance_tasks.discard)
+
+    def _cancel_maintenance(self) -> None:
+        """A live user request takes priority over stale background upkeep."""
+        for task in tuple(self._maintenance_tasks):
+            task.cancel()
 
     async def _enrich_session_memory(self, user_line: str, response: str) -> None:
         """Use an available LLM to enrich regex memory; never blocks the reply."""
