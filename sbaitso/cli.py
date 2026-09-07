@@ -12,7 +12,6 @@ import concurrent.futures
 import os
 import shutil
 import sys
-import textwrap
 from contextlib import contextmanager
 
 try:  # POSIX only; Windows falls back to line input
@@ -29,6 +28,7 @@ from .events import (
     VoiceEnabled, VoiceParams,
 )
 from .persona_loader import persona_names
+from .layout import RESPONSE_INDENT, SAY_WRAP_WIDTH, wrap_terminal_line
 from .voice import EspeakVoice, VoiceState, available
 
 ANSI = {
@@ -40,20 +40,6 @@ ANSI = {
     "dim": "\x1b[90m",
 }
 RESET = "\x1b[0m"
-SAY_WRAP_WIDTH = 72
-RESPONSE_INDENT = " "
-
-
-def wrap_terminal_line(text: str, width: int) -> list[str]:
-    """Wrap a boot/listing line at word boundaries without splitting words."""
-    if not text:
-        return [""]
-    return textwrap.wrap(
-        text,
-        width=max(1, width),
-        break_long_words=False,
-        break_on_hyphens=False,
-    ) or [""]
 
 PALETTE_FG = {
     "cga1": ANSI["cyan"],
@@ -355,7 +341,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="sbaitso",
         description="DR. SBAITSO/2 - a modern chatbot with a 1991 DOS soul",
     )
-    sub = p.add_subparsers(dest="cmd")
+    sub = p.add_subparsers(dest="cmd", title="frontends")
 
     def common(sp: argparse.ArgumentParser) -> None:
         sp.add_argument("--brain", choices=["auto", "ollama", "remote", "retro"], default="auto")
@@ -394,7 +380,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     argv = list(sys.argv[1:] if argv is None else argv)
     # default subcommand: run
-    if not argv or argv[0] not in {"run", "serve", "tui"}:
+    if not argv:
+        argv = ["run"]
+    elif argv[0] not in {"run", "serve", "tui", "-h", "--help"}:
         argv = ["run"] + argv
     args = build_parser().parse_args(argv)
     if args.cmd == "serve":
