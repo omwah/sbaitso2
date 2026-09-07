@@ -105,8 +105,7 @@ pixi run test              # run tests (offline; Ollama probing is redirected)
 ## License & credits
 
 Dr. Sbaitso was © Creative Labs, 1991. This is an affectionate fan
-recreation. The 1991 manual scan in this folder is reference material,
-kept locally and not tracked in git.
+recreation. See the [original Dr. Sbaitso user reference manual](https://www.retrogames.cz/manualy/DOS/Dr_Sbaitso_-_DOS_-_Manual.pdf).
 
 The bundled `web/vendor/samjs.min.js` is SamJs v0.3.1, © 2017–2024
 Christian Schiffler / [discordier/sam](https://github.com/discordier/sam),
