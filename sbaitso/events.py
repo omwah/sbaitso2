@@ -129,6 +129,14 @@ class EchoMode(Event):
 
 
 @dataclass
+class Wait(Event):
+    """Show or hide the transient request-loading indicator."""
+
+    on: bool = True
+    delay_ms: int = 0
+
+
+@dataclass
 class Quit(Event):
     """Session over; error=True denotes an unrecoverable startup failure."""
 

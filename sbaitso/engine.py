@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from .boot import GLITCH_LINE, banner_events, greeting_events, parity_events, retro_warning
 from .brains import Brain, BrainContext, OllamaBrain, RemoteBrain, RetroBrain
 from .commands import CommandVM
-from .events import Clear, Line, Palette, Prompt, Quit, Say
+from .events import Clear, Line, Palette, Prompt, Quit, Say, Wait
 from .llm import OllamaClient, RemoteClient
 from .memory import Fact, SessionMemory
 from .persona import assemble_messages
@@ -458,10 +458,17 @@ class Engine:
         )
         ctx = BrainContext(user_text=line, name=self.memory.name)
         parts: list[str] = []
+        waiting = True
+        yield Wait()
         async for ev in self._reply(messages, ctx):
+            if waiting and isinstance(ev, Say):
+                yield Wait(on=False)
+                waiting = False
             yield ev
             if isinstance(ev, Say):
                 parts.append(ev.text)
+        if waiting:
+            yield Wait(on=False)
         text = "\n".join(parts)
         self._record(line, text)
         self.memory.last_response = text

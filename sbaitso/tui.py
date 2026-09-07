@@ -10,7 +10,7 @@ from textual.containers import Vertical
 from textual.widgets import Input, RichLog
 
 from .engine import Engine, EngineArgs, Inputs
-from .events import Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say
+from .events import Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say, Wait
 from .layout import RESPONSE_INDENT, SAY_WRAP_WIDTH, wrap_terminal_line
 
 # Rich equivalents of the native renderer's ANSI palette semantics.
@@ -139,6 +139,9 @@ class SbaitsoApp(App[None]):
             lines = wrap_terminal_line(event.text, width) if event.wrap else [event.text]
             self._append("\n".join(lines) + "\n", LINE_STYLE.get(event.color, "white"))
             self._render_terminal()
+        elif isinstance(event, Wait):
+            self._waiting = event.on
+            self._render_terminal()
         elif isinstance(event, Say):
             self._waiting = False
             self._say_style = "dim" if event.voice == "echo" else PALETTE_STYLE.get(self._palette, "white")
@@ -172,7 +175,6 @@ class SbaitsoApp(App[None]):
             return
         event.input.value = ""
         self._append(f" {self._prompt_label}> {text}\n", "dim")
-        self._waiting = True
         self._render_terminal()
         self.inputs.push(text)
 

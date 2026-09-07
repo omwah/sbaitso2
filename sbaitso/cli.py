@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover - windows
 
 from .engine import Engine, EngineArgs, Inputs
 from .events import (
-    Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say,
+    Bell, Beep, Clear, Event, KeyclickMode, Line, Palette, Prompt, Quit, Say, Wait,
     VoiceEnabled, VoiceParams,
 )
 from .persona_loader import persona_names
@@ -167,6 +167,7 @@ class Renderer:
         self.say_column = 0
         self.say_word = ""
         self.keyclick_on = False
+        self.waiting_line = False
 
     def click(self) -> None:
         if self.keyclick_on:
@@ -249,6 +250,14 @@ class Renderer:
             sys.stdout.flush()
         elif isinstance(ev, KeyclickMode):
             self.keyclick_on = ev.on
+        elif isinstance(ev, Wait):
+            if ev.on:
+                sys.stdout.write(f"\n{ANSI['yellow']} REQUEST SENT — WAITING FOR RESPONSE...{RESET}")
+                self.waiting_line = True
+            elif self.waiting_line:
+                sys.stdout.write("\r\x1b[2K")
+                self.waiting_line = False
+            sys.stdout.flush()
         elif isinstance(ev, Palette):
             self.say_color = PALETTE_FG.get(ev.name, self.say_color)
             apply_native_palette(ev.name)
