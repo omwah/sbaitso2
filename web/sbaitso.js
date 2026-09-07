@@ -90,6 +90,7 @@ let inputEnabled = false;
 let inputBuffer = "";
 let dead = false;
 let keyclickOn = false;
+let waitingLine = false;
 
 /* ---- voice state: the authentic 0-9 scales, mapped to S.A.M. ---- */
 const SAM_RATE = 22050;
@@ -296,6 +297,15 @@ async function handle(ev) {
     case "keyclickmode":
       keyclickOn = ev.on;
       syncKeyclickToggle();
+      break;
+    case "wait":
+      if (ev.on) {
+        writeOutput("\r\n" + COLORS.yellow + " REQUEST SENT — WAITING FOR RESPONSE..." + RESET);
+        waitingLine = true;
+      } else if (waitingLine) {
+        term.write("\r\x1b[2K");
+        waitingLine = false;
+      }
       break;
     case "beep":
       beep(ev.freq, ev.ms);
