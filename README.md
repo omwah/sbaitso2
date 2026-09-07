@@ -102,16 +102,6 @@ pixi install               # create .pixi env (conda-forge python + pypi deps)
 pixi run test              # run tests (offline; Ollama probing is redirected)
 ```
 
-## Status
-
-Phases 0–4 are complete (see `PLAN.md`): core engine, both frontends, brain
-ladder with failover, command VM, RAM-only session memory and summaries,
-safety layer, PARITY ERROR theater, configurable palette/keyclick/voice
-controls, and synchronized web/native presentation.
-
-Phase 5 is complete: bundled persona loading, the fullscreen `sbaitso tui`
-Textual frontend, and OpenAI-compatible remote-provider autodetection.
-
 ## License & credits
 
 Dr. Sbaitso was © Creative Labs, 1991. This is an affectionate fan
