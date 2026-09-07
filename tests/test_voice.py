@@ -3,13 +3,13 @@ from sbaitso.voice import VoiceState, espeak_args
 
 
 def test_espeak_args_defaults():
-    state = VoiceState()  # tone=1, volume=5, pitch=5, speed=5
+    state = VoiceState()  # tone=1, volume=5, pitch=5, speed=3
     args = espeak_args(state)
     assert args[0] == "-v" and args[1] == "en-us+f2"
     # pitch 5 -> 5+50=55, +5 treble = 60
     assert args[args.index("-p") + 1] == "60"
-    # speed 5 -> 100+150=250
-    assert args[args.index("-s") + 1] == "250"
+    # speed 3 -> 100+90=190
+    assert args[args.index("-s") + 1] == "190"
     # volume 5 -> ~111
     assert args[args.index("-a") + 1] == "111"
 

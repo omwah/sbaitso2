@@ -23,7 +23,7 @@ class VoiceState:
     tone: int = 1
     volume: int = 5
     pitch: int = 5
-    speed: int = 5
+    speed: int = 3
     on: bool = True
 
     def update(self, ev) -> None:
